@@ -6,12 +6,13 @@ public class DataFrame {
         DataFrame df = new DataFrame(new String[]{"kol1", "kol2", "kol3"},
                 new String[]{"Integer", "Double", "String"});
         df.add(new ArrayList<>(Arrays.asList(1, 2.5, "auwn")));
-        DataFrame df2 = df.get(new String[] {"kol1","kol2"},false);
+        DataFrame df2 = df.get(new String[] {"kol1","kol2"},true);
         df2.set(0,1,2.78);
         df.print();
         df2.add(new ArrayList<>(Arrays.asList(5, 5.23)));
         df2.add(new ArrayList<>(Arrays.asList(23, 12.42)));
         df2.add(new ArrayList<>(Arrays.asList(832, 14.2)));
+        df.print();
         System.out.println(df.size());
         System.out.println(df2.size());
         df2.print();
