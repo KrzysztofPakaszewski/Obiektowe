@@ -7,27 +7,6 @@ import java.util.regex.Pattern;
 
 public class DataFrame {
     public static void main(String [] argv) {
-        /*
-        DataFrame df = new DataFrame(new String[]{"kol1", "kol2", "kol3"},
-                new String[]{"Integer", "Double", "String"});
-        df.add(new ArrayList<>(Arrays.asList(1, 2.5, "auwn")));
-        DataFrame df2 = df.get(new String[] {"kol1","kol2"},true);
-        df2.set(0,1,2.78);
-        df.print();
-        df2.add(new ArrayList<>(Arrays.asList(5, 5.23)));
-        df2.add(new ArrayList<>(Arrays.asList(23, 12.42)));
-        df2.add(new ArrayList<>(Arrays.asList(832, 14.2)));
-        df.print();
-        System.out.println(df.size());
-        System.out.println(df2.size());
-        df2.print();
-        System.out.println();
-        DataFrame df4 = df2.iloc(1,3);
-        df4.print();
-
-        DataFrame df = new DataFrame("TestFiles\\data.csv", new String[]{"Integer","Integer","Integer"}, true);
-        df.print();
-        */
     }
     protected ArrayList<String> names = new ArrayList<String>();
     protected ArrayList<String> types = new ArrayList<String>();
@@ -175,22 +154,29 @@ public class DataFrame {
         }
     }
     public void addColumn(String name, String type, ArrayList<Object> objects){
-        if(!Table.isEmpty()) {
-            if(Table.get(0).size() == objects.size()) {
+        boolean Match=true;
+        for(int a=0;a< objects.size();a++){
+            if(!type.equals(objects.get(a).getClass().getSimpleName()))
+                Match=false;
+        }
+        if(Match) {
+            if (!Table.isEmpty()) {
+                if (Table.get(0).size() == objects.size()) {
+                    names.add(name);
+                    types.add(type);
+                    Table.add(objects);
+                }
+            }
+            else {
                 names.add(name);
                 types.add(type);
                 Table.add(objects);
             }
         }
-        else{
-            names.add(name);
-            types.add(type);
-            Table.add(objects);
-        }
     }
     public void add(ArrayList<Object> objects){
         if (types.size() == objects.size()) {
-            boolean TypesMatch = isTypesMatch(objects);
+            boolean TypesMatch = TypesMatch(objects);
             if (TypesMatch) {
                 if(Table.isEmpty()){
                     for (int a = 0; a < types.size(); a++) {
@@ -207,8 +193,7 @@ public class DataFrame {
             }
         }
     }
-
-    protected boolean isTypesMatch(ArrayList<Object> objects) {
+    protected boolean TypesMatch(ArrayList<Object> objects) {
         for (int a = 0; a < types.size(); a++) {
             if (!types.get(a).equals(objects.get(a).getClass().getSimpleName())) {
                 return false;
@@ -221,6 +206,12 @@ public class DataFrame {
         if(!Table.isEmpty())
             return Table.get(0).size();
         return 0;
+    }
+    public Object get(int row, int col){
+        if(col>=0 && col<Table.size() && row<this.size() && row>=0){
+            return Table.get(col).get(row);
+        }
+        return null;
     }
     public ArrayList<?> get(String colname){
         if(!Table.isEmpty() && names.contains(colname)) {
@@ -238,7 +229,7 @@ public class DataFrame {
                         continue;
                     }
                     int index = names.indexOf(cols[a]);
-                    output.addColumn(cols[a], (String) types.get(index), (ArrayList<Object>) Table.get(index).clone());
+                    output.addColumn(cols[a], types.get(index), (ArrayList<Object>) Table.get(index).clone());
                 }
             } else {
                 for (int a = 0; a < cols.length; a++) {
@@ -275,7 +266,7 @@ public class DataFrame {
         }
         return new ArrayList<>();
     }
-    public DataFrame sum(DataFrame other){
+    protected DataFrame sum(DataFrame other){
         if(this.names.equals(other.names) && this.types.equals(other.types) && !other.Table.isEmpty()){
             for(int a=0; a < other.Table.get(0).size();a++){
                 ArrayList<Object> temp = new ArrayList<>();
