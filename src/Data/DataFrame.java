@@ -1,6 +1,10 @@
 package Data;
+import Data.Values.StringValue;
+import Data.Values.Value;
+
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -9,27 +13,27 @@ public class DataFrame {
     public static void main(String [] argv) {
     }
     protected ArrayList<String> names = new ArrayList<String>();
-    protected ArrayList<String> types = new ArrayList<String>();
-    private ArrayList<ArrayList<Object>> Table= new ArrayList<ArrayList<Object>>();
+    protected ArrayList<Class<? extends Value>> types = new ArrayList<>();
+    private ArrayList<ArrayList<Value>> Table= new ArrayList<>();
 
-    public DataFrame(String[] columnnames, String[] columntypes){
-        for(int a =0; a< columntypes.length;a++)
+    public DataFrame(String[] columnnames, ArrayList<Class<? extends Value>> columntypes){
+        for(int a =0; a< columntypes.size();a++)
         {
                 names.add(columnnames[a]);
-                types.add(columntypes[a]);
+                types=columntypes;
         }
     }
-    public DataFrame(String filePath, String[] columntypes, boolean header){
-        ArrayList<ArrayList<Object>> temp = ReadFile(filePath,columntypes,header);
+    public DataFrame(String filePath, ArrayList<Class<? extends Value>> columntypes, boolean header){
+        ArrayList<ArrayList<String>> temp = ReadFile(filePath,columntypes,header);
         if(!temp.isEmpty()) {
             int a;
             String[] columnnames;
-            columnnames= handlingColumnNames(columntypes.length, header, temp);
-            for(int c =0; c< columntypes.length;c++)
+            columnnames= handlingColumnNames(columntypes.size(), header, temp);
+            for(int c =0; c< columntypes.size();c++)
             {
                 names.add(columnnames[c]);
-                types.add(columntypes[c]);
             }
+            types= columntypes;
             if(header)
                 a=1;
             else
@@ -40,7 +44,7 @@ public class DataFrame {
         }
     }
 
-    protected String[] handlingColumnNames(int length, boolean header, ArrayList<ArrayList<Object>> temp) {
+    protected String[] handlingColumnNames(int length, boolean header, ArrayList<ArrayList<String>> temp) {
         String[] columnnames=new String[length];
         if (header) {
             columnnames=temp.get(0).toArray(new String[0]);
@@ -61,21 +65,19 @@ public class DataFrame {
         return columnnames;
     }
 
-    protected ArrayList<ArrayList<Object>> ReadFile(String filepath, String[] columntypes, boolean header) {
+    protected ArrayList<ArrayList<String>> ReadFile(String filepath, ArrayList<Class<? extends Value>> columntypes, boolean header) {
         BufferedReader br;
         FileInputStream fstream;
         Pattern pattern =Pattern.compile("(.*?),|(.+$)");
         Matcher m;
-        ArrayList<ArrayList<Object>> output = new ArrayList<ArrayList<Object>>();
+        ArrayList<ArrayList<String>> output = new ArrayList<>();
         try {
             fstream = new FileInputStream(filepath);
             br = new BufferedReader(new InputStreamReader(fstream));
             String strLine;
-            boolean FirstLine = true;
             while ((strLine = br.readLine()) != null)   {
-                // Print the content on the console
                 ArrayList<String> allMatches = new ArrayList<>();
-                ArrayList<Object> temp= new ArrayList<>();
+                ArrayList<String> temp= new ArrayList<>();
                 m= pattern.matcher(strLine);
                 while(m.find()){
                     if(m.group(1) != null)
@@ -85,20 +87,7 @@ public class DataFrame {
                     }
                 }
                 for (int a = 0; a < allMatches.size(); a++) {
-                    if(FirstLine && header){
                         temp.add(allMatches.get(a));
-                    }
-                    else if (columntypes[a] == "Integer") {
-                        temp.add(Integer.parseInt(allMatches.get(a)));
-                    } else if (columntypes[a] == "Double") {
-                        temp.add(Double.parseDouble(allMatches.get(a)));
-                    } else {
-                        Class clazz = Class.forName(columntypes[a]);
-                        clazz.getMethod("FromString", String.class).invoke(null, allMatches.get(a));
-                    }
-                }
-                if(FirstLine){
-                    FirstLine = false;
                 }
                 output.add(temp);
             }
@@ -109,18 +98,6 @@ public class DataFrame {
         }
         catch (IOException exc){
             System.out.println("Stream error!");
-        }
-        catch (ClassNotFoundException exc){
-            System.out.println("The Class does not exist");
-        }
-        catch (NoSuchMethodException exc){
-            System.out.println("Class does not have method \"FromString\" to create object from string");
-        }
-        catch (InvocationTargetException exc){
-            System.out.println("Wrong data");
-        }
-        catch (IllegalAccessException exc){
-            System.out.println("Illegal access");
         }
         catch(NumberFormatException exc){
             System.out.println("Incorrect values for a type");
@@ -146,17 +123,17 @@ public class DataFrame {
             }
         }
     }
-    public void set(int row,int col,Object data){
+    public void set(int row,int col,Value data){
         if(!Table.isEmpty() && col >= 0 && col < this.size() && row >=0 && row<Table.get(0).size() ) {
             if (data.getClass().getSimpleName().equals(types.get(col))) {
                 Table.get(col).set(row, data);
             }
         }
     }
-    public void addColumn(String name, String type, ArrayList<Object> objects){
+    public void addColumn(String name, Class<? extends Value> type, ArrayList<Value> objects){
         boolean Match=true;
         for(int a=0;a< objects.size();a++){
-            if(!type.equals(objects.get(a).getClass().getSimpleName()))
+            if(!type.isInstance(objects.get(a)))
                 Match=false;
         }
         if(Match) {
@@ -174,28 +151,26 @@ public class DataFrame {
             }
         }
     }
-    public void add(ArrayList<Object> objects){
-        if (types.size() == objects.size()) {
-            boolean TypesMatch = TypesMatch(objects);
-            if (TypesMatch) {
-                if(Table.isEmpty()){
-                    for (int a = 0; a < types.size(); a++) {
-                        ArrayList<Object> temp = new ArrayList<>();
-                        temp.add(objects.get(a));
-                        Table.add(temp);
-                    }
+    public void add(ArrayList<String> objects){
+        if (types.size() == objects.size() && TypesMatch(objects)) {
+            if (Table.isEmpty()) {
+                for (int a = 0; a < types.size(); a++) {
+                    ArrayList<Value> temp = new ArrayList<>();
+                    temp.add(Value.getInstance(types.get(a)).create(objects.get(a)));
+                    Table.add(temp);
                 }
-                else {
-                    for (int a = 0; a < Table.size(); a++) {
-                        Table.get(a).add(objects.get(a));
-                    }
+            } else {
+                for (int a = 0; a < Table.size(); a++) {
+                    Table.get(a).add(Value.getInstance(types.get(a)).create(objects.get(a)));
                 }
             }
         }
     }
-    protected boolean TypesMatch(ArrayList<Object> objects) {
+    protected boolean TypesMatch(ArrayList<String> objects) {
         for (int a = 0; a < types.size(); a++) {
-            if (!types.get(a).equals(objects.get(a).getClass().getSimpleName())) {
+            try{
+                Value.getInstance(types.get(a)).create(objects.get(a));
+            }catch (NumberFormatException exc){
                 return false;
             }
         }
@@ -229,7 +204,7 @@ public class DataFrame {
                         continue;
                     }
                     int index = names.indexOf(cols[a]);
-                    output.addColumn(cols[a], types.get(index), (ArrayList<Object>) Table.get(index).clone());
+                    output.addColumn(cols[a], types.get(index), (ArrayList<Value>) Table.get(index).clone());
                 }
             } else {
                 for (int a = 0; a < cols.length; a++) {
@@ -246,21 +221,23 @@ public class DataFrame {
 
     public DataFrame iloc(int i){
         if(!Table.isEmpty() && i>=0 && i< Table.get(0).size()){
-            DataFrame output = new DataFrame(names.toArray(new String [0]),types.toArray(new String[0]));
-            ArrayList<Object> temp = new ArrayList<>();
+            DataFrame output = new DataFrame();
+            output.names = (ArrayList<String>) names.clone();
+            output.types = (ArrayList<Class<? extends Value>>) types.clone();
+            ArrayList<String> temp = new ArrayList<>();
             for(int a =0;a < Table.size();a++){
-                temp.add(Table.get(a).get(i));
+                temp.add(Table.get(a).get(i).toString());
             }
             output.add(temp);
             return output;
         }
         return new DataFrame();
     }
-    public ArrayList<Object> ilocArray(int i){
+    public ArrayList<String> ilocArray(int i){
         if(!Table.isEmpty() && i>=0 && i< Table.get(0).size()) {
-            ArrayList<Object> temp = new ArrayList<>();
+            ArrayList<String> temp = new ArrayList<>();
             for (int a = 0; a < Table.size(); a++) {
-                temp.add(Table.get(a).get(i));
+                temp.add(Table.get(a).get(i).toString());
             }
             return temp;
         }
@@ -269,9 +246,9 @@ public class DataFrame {
     protected DataFrame sum(DataFrame other){
         if(this.names.equals(other.names) && this.types.equals(other.types) && !other.Table.isEmpty()){
             for(int a=0; a < other.Table.get(0).size();a++){
-                ArrayList<Object> temp = new ArrayList<>();
+                ArrayList<String> temp = new ArrayList<>();
                 for(int b =0;b<other.Table.size();b++){
-                    temp.add(other.Table.get(b).get(a));
+                    temp.add(other.Table.get(b).get(a).toString());
                 }
                 this.add(temp);
             }

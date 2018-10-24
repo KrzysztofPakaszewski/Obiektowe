@@ -1,12 +1,15 @@
 package Data;
 
+import Data.Values.Value;
+
 import java.util.ArrayList;
 
 public class SparseDataFrame extends DataFrame{
+
     public static void main(String argv[]){
     }
-    public SparseDataFrame(DataFrame other, Object hide){
-        super(other.names.toArray(new String[0]),other.types.toArray(new String[0]));
+    public SparseDataFrame(DataFrame other, Value hide){
+        super(other.names.toArray(new String[0]),other.types);
         for(int a =0; a< other.names.size();a++)
         {
             ArrayList<C00Value> temp = new ArrayList<>();
@@ -19,10 +22,10 @@ public class SparseDataFrame extends DataFrame{
             size++;
         }
     }
-    public SparseDataFrame(String[] columnnames, String[] columntypes,
-                           Object hide){
+    public SparseDataFrame(String[] columnnames, ArrayList<Class<? extends Value>> columntypes,
+                           Value hide){
         super(columnnames,columntypes);
-        for(int a =0; a< columntypes.length;a++)
+        for(int a =0; a< columntypes.size();a++)
         {
             ArrayList<C00Value> temp = new ArrayList<>();
             data.add(temp);
@@ -31,24 +34,24 @@ public class SparseDataFrame extends DataFrame{
         tohide = hide;
     }
     public SparseDataFrame(){size=0;}
-    public SparseDataFrame(String filePath, String[] columntypes, boolean header,Object hide){
+    public SparseDataFrame(String filePath, ArrayList<Class<? extends Value>> columntypes, boolean header,Value hide){
         tohide=hide;
         size=0;
-        for(int a =0; a< columntypes.length;a++)
+        for(int a =0; a< columntypes.size();a++)
         {
             ArrayList<C00Value> temp = new ArrayList<>();
             data.add(temp);
         }
-        ArrayList<ArrayList<Object>> temp = ReadFile(filePath,columntypes,header);
+        ArrayList<ArrayList<String>> temp = ReadFile(filePath,columntypes,header);
         if(!temp.isEmpty()) {
             int a;
             String[] columnnames;
-            columnnames= handlingColumnNames(columntypes.length, header, temp);
-            for(int c =0; c< columntypes.length;c++)
+            columnnames= handlingColumnNames(columntypes.size(), header, temp);
+            for(int c =0; c< columntypes.size();c++)
             {
                 names.add(columnnames[c]);
-                types.add(columntypes[c]);
             }
+            types=columntypes;
             if(header)
                 a=1;
             else
@@ -59,7 +62,7 @@ public class SparseDataFrame extends DataFrame{
         }
     }
 
-    private Object tohide;
+    private Value tohide;
     private ArrayList<ArrayList<C00Value>> data =
             new ArrayList<ArrayList<C00Value>>();
     private int size;
@@ -75,13 +78,12 @@ public class SparseDataFrame extends DataFrame{
         }
     }
 
-    public void add(ArrayList<Object> objects){
+    public void add(ArrayList<String> objects){
         if (types.size() == objects.size()) {
-            boolean TypesMatch = TypesMatch(objects);
-            if(TypesMatch){
+            if(TypesMatch(objects)){
                 for( int a =0; a< objects.size();a++){
-                    if(!objects.get(a).equals(tohide)){
-                        data.get(a).add(new C00Value(objects.get(a),size));
+                    if(!objects.get(a).equals(tohide.toString())){
+                        data.get(a).add(new C00Value(Value.getInstance(types.get(a)).create(objects.get(a)),size));
                     }
                 }
                 size++;
@@ -89,16 +91,16 @@ public class SparseDataFrame extends DataFrame{
         }
     }
     public DataFrame toDense(){
-        DataFrame output = new DataFrame(names.toArray(new String [0]),types.toArray(new String[0]));
+        DataFrame output = new DataFrame(names.toArray(new String [0]),types);
         for(int a=0; a< size; a++) {
             output.add(ilocArray(a));
         }
         return output;
     }
-    public void addColumnSparse(String name, String type, ArrayList<C00Value> objects){
+    public void addColumnSparse(String name, Class<? extends Value> type, ArrayList<C00Value> objects){
         boolean Match= true;
         for(int a=0;a< objects.size();a++){
-            if(!type.equals(objects.get(a).getData().getClass().getSimpleName()))
+            if(!type.isInstance(objects.get(a).getData()))
                 Match=false;
         }
         if(Match) {
@@ -120,7 +122,7 @@ public class SparseDataFrame extends DataFrame{
         return size;
     }
     @Override
-    public Object get(int row, int col){
+    public Value get(int row, int col){
         if(row>=0 && row< this.size() && col>=0 && col < types.size()){
             if(col < data.size()) {
                 for (int a = 0; a < data.get(col).size(); a++) {
@@ -170,8 +172,8 @@ public class SparseDataFrame extends DataFrame{
     @Override
     public SparseDataFrame iloc(int i){
         if(!data.isEmpty() && i>=0 && i< size){
-            SparseDataFrame output = new SparseDataFrame(names.toArray(new String [0]),types.toArray(new String[0]),this.tohide);
-            ArrayList<Object> temp = new ArrayList<>();
+            SparseDataFrame output = new SparseDataFrame(names.toArray(new String [0]),types,this.tohide);
+            ArrayList<String> temp = new ArrayList<>();
             this.GetRow(i,temp);
             output.add(temp);
             return output;
@@ -190,27 +192,28 @@ public class SparseDataFrame extends DataFrame{
         return new SparseDataFrame();
     }
     @Override
-    public ArrayList<Object> ilocArray(int i){
+    public ArrayList<String> ilocArray(int i){
         if(!data.isEmpty() && i>=0 && i< size) {
-            ArrayList<Object> temp = new ArrayList<>();
+            ArrayList<String> temp = new ArrayList<>();
             GetRow(i, temp);
             return temp;
         }
         return new ArrayList<>();
     }
 
-    protected void GetRow(int i, ArrayList<Object> temp) {
+    protected void GetRow(int i, ArrayList<String> temp) {
         for (int a = 0; a < data.size(); a++) {
             boolean isfound = false;
             for (int b = 0; b < data.get(a).size(); b++) {
                 if (data.get(a).get(b).row == i) {
-                    temp.add(data.get(a).get(b).data);
+                    temp.add(data.get(a).get(b).data.toString());
                     isfound = true;
                 }
             }
             if (!isfound) {
-                temp.add(tohide);
+                temp.add(tohide.toString());
             }
         }
     }
+
 }
