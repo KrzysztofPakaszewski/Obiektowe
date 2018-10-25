@@ -18,13 +18,7 @@ public class StringValue extends Value {
         return data;
     }
     public  Value add(Value v) {
-        try {
-            return new StringValue(data + ((StringValue) v).data);
-        }
-        catch (ClassCastException exc){
-            System.out.println("Cannot cast object");
-        }
-        return null;
+        return new StringValue(data + v.toString());
     }
     public  Value sub(Value v){
         return null;
