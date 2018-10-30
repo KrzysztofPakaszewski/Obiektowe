@@ -1,11 +1,16 @@
 package Data;
-import Data.Values.StringValue;
-import Data.Values.Value;
+import Data.Interfaces.Applyable;
+import Data.Interfaces.Groubby;
+import Data.Values.*;
 
+import javax.swing.*;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Formatter;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,6 +26,7 @@ public class DataFrame {
         {
                 names.add(columnnames[a]);
                 types=columntypes;
+                Table.add(new ArrayList<>());
         }
     }
     public DataFrame(String filePath, ArrayList<Class<? extends Value>> columntypes, boolean header){
@@ -109,7 +115,7 @@ public class DataFrame {
     public DataFrame(){}
     public void print(){
         for (String name : names) {
-            System.out.format( "%10s", name+ " ");
+            System.out.format( "%15s", name+ " ");
         }
         System.out.println();
         if(!Table.isEmpty()){
@@ -117,11 +123,35 @@ public class DataFrame {
             {
                 for (int b =0; b< Table.size();b++)
                 {
-                    System.out.format("%10s" ,Table.get(b).get(a) + " ");
+                    System.out.format("%15s" ,Table.get(b).get(a).toString() + " ");
                 }
                 System.out.println();
             }
         }
+    }
+    public String toString(){
+        String output= new String();
+        for (String name : names) {
+            StringBuilder sbuf = new StringBuilder();
+            Formatter form=new Formatter(sbuf);
+            form.format("%15s",name + " ");
+            output += sbuf.toString();
+        }
+        output+="\n";
+        if(!Table.isEmpty()){
+            for (int a= 0; a< Table.get(0).size();a++)
+            {
+                for (int b =0; b< Table.size();b++)
+                {
+                    StringBuilder sbuf = new StringBuilder();
+                    Formatter form=new Formatter(sbuf);
+                    form.format("%15s" ,Table.get(b).get(a).toString() + " ");
+                    output += sbuf.toString();
+                }
+                output+="\n";
+            }
+        }
+        return output;
     }
     public void set(int row,int col,Value data){
         if(!Table.isEmpty() && col >= 0 && col < this.size() && row >=0 && row<Table.get(0).size() ) {
@@ -264,5 +294,249 @@ public class DataFrame {
             return output;
         }
         return new DataFrame();
+    }
+
+    public Grouped groupby(String[] colname){
+        ArrayList<DataFrame> output = new ArrayList<>();
+        for(int a =0;a<colname.length;a++){
+            if(names.contains(colname[a])){
+                if( output.isEmpty()){
+                    output=this.groupbyArray(colname[a]);
+                }
+                else {
+                    ArrayList<DataFrame> tmp=new ArrayList<>();
+                    for(int b =0;b< output.size();b++){
+                        tmp.addAll(output.get(b).groupbyArray(colname[a]));
+                    }
+                    output.clear();
+                    output=tmp;
+                }
+            }
+        }
+        return new Grouped(output,colname);
+    }
+    public Grouped groupby(String a){
+        return new Grouped(groupbyArray(a),a);
+    }
+    private ArrayList<Value> getRow(int i){
+        if(i>=0 && i< this.size()){
+            ArrayList<Value> output = new ArrayList<>();
+            for(int a=0; a< Table.size();a++){
+                output.add(Table.get(a).get(i));
+            }
+            return output;
+        }
+        return null;
+    }
+    private boolean typesm(ArrayList<Value> row){
+        for(int a=0;a<row.size();a++){
+            if(!types.get(a).isInstance(row.get(a))){
+                return false;
+            }
+        }
+        return true;
+    }
+    private void addV(ArrayList<Value> row){
+        if(row.size()== types.size() && typesm(row)){
+            for(int a=0;a<row.size();a++){
+                Table.get(a).add(row.get(a));
+            }
+        }
+    }
+    private ArrayList<DataFrame> groupbyArray(String colname){
+        if(names.contains(colname) && !Table.isEmpty()){
+            int indexOfCol= names.indexOf(colname);
+            HashMap map = new HashMap();
+            ArrayList<DataFrame> output = new ArrayList<>();
+            for(int a=0;a < Table.get(indexOfCol).size();a++){
+                if(map.containsKey(Table.get(indexOfCol).get(a))){
+                    output.get((int)map.get(Table.get(indexOfCol).get(a))).addV(getRow(a));
+                }
+                else{
+                    map.put(Table.get(indexOfCol).get(a),map.size());
+                    output.add(new DataFrame(names.toArray(new String[0]),types));
+                    output.get((int)map.get(Table.get(indexOfCol).get(a))).addV(getRow(a));
+                }
+            }
+            return output;
+        }
+        throw new RuntimeException("Column not found");
+    }
+    public class Grouped implements Groubby{
+        ArrayList<DataFrame> data;
+        ArrayList<String> Cols=new ArrayList<>();
+        private Grouped(ArrayList<DataFrame> input,String[] colsgr){
+            data=input;
+            Cols.addAll(Arrays.asList(colsgr));
+        }
+        private Grouped(ArrayList<DataFrame> input,String colsgr){
+            data=input;
+            Cols.add(colsgr);
+        }
+        @Override
+        public DataFrame max(){
+            DataFrame output= new DataFrame(data.get(0).names.toArray(new String[0]),data.get(0).types);
+            for(int a=0;a<data.size();a++){
+                ArrayList<Value> temp= new ArrayList<>();
+                for(int b =0;b<data.get(a).Table.size();b++){
+                    if(Cols.contains(data.get(a).names.get(b))){
+                        temp.add(data.get(a).Table.get(b).get(0));
+                        continue;
+                    }
+                    Value max= data.get(a).Table.get(b).get(0);
+                    for(int c =1;c<data.get(a).Table.get(b).size();c++){
+                        if(data.get(a).Table.get(b).get(c).greaterOrEquals(max)){
+                            max = data.get(a).Table.get(b).get(c);
+                        }
+                    }
+                    temp.add(max);
+                }
+                output.addV(temp);
+            }
+            return output;
+        }
+        public DataFrame min(){
+            DataFrame output= new DataFrame(data.get(0).names.toArray(new String[0]),data.get(0).types);
+            for(int a=0;a<data.size();a++){
+                ArrayList<Value> temp= new ArrayList<>();
+                for(int b =0;b<data.get(a).Table.size();b++){
+                    if(Cols.contains(data.get(a).names.get(b))){
+                        temp.add(data.get(a).Table.get(b).get(0));
+                        continue;
+                    }
+                    Value min= data.get(a).Table.get(b).get(0);
+                    for(int c =1;c<data.get(a).Table.get(b).size();c++){
+                        if(data.get(a).Table.get(b).get(c).lessOrEquals(min)){
+                            min = data.get(a).Table.get(b).get(c);
+                        }
+                    }
+                    temp.add(min);
+                }
+                output.addV(temp);
+            }
+            return output;
+        }
+        private boolean isNumber(Object a){
+            if(IntegerValue.class.isInstance(a)){
+                return true;
+            }
+            else if(DoubleValue.class.isInstance(a)){
+                return true;
+            }
+            else if(FloatValue.class.isInstance(a)){
+                return true;
+            }
+            return false;
+        }
+        private Value meanOfArray(ArrayList<Value> array){
+            return sumOfArray(array).div(new IntegerValue(array.size()));
+        }
+        private Value sumOfArray(ArrayList<Value> array) {
+            Value tmp = array.get(0);
+            for (int c = 1; c < array.size(); c++) {
+                tmp = tmp.add(array.get(c));
+            }
+            return tmp;
+        }
+        public DataFrame mean(){
+            DataFrame output= new DataFrame();
+            Setup(output);
+            for(int a=0;a<data.size();a++){
+                ArrayList<Value> temp= new ArrayList<>();
+                for(int b =0;b<data.get(a).Table.size();b++){
+                    if(Cols.contains(data.get(a).names.get(b))){
+                        temp.add(data.get(a).Table.get(b).get(0));
+                    }
+                    else if(isNumber(data.get(a).Table.get(b).get(0))) {
+                        temp.add(meanOfArray(data.get(a).Table.get(b)));
+                    }
+                }
+                output.addV(temp);
+            }
+            return output;
+        }
+
+        protected void Setup(DataFrame output) {
+            for (int a = 0; a < data.get(0).types.size(); a++) {
+                if (isNumber(data.get(0).Table.get(a).get(0)) || Cols.contains(data.get(0).names.get(a))) {
+                    output.names.add(data.get(0).names.get(a));
+                    output.types.add(data.get(0).types.get(a));
+                    output.Table.add(new ArrayList<>());
+                }
+            }
+        }
+
+        private Value varOfArray(ArrayList<Value> array) {
+            Value mean = meanOfArray(array);
+            Value tmp = array.get(0).sub(mean).pow(new IntegerValue(2));
+            for (int c = 1; c < array.size(); c++) {
+                tmp = tmp.add(array.get(c).sub(mean).pow(new IntegerValue(2)));
+            }
+            return tmp.div(new IntegerValue(array.size()));
+        }
+        private Value stdOfArray(ArrayList<Value> array){
+            return varOfArray(array).sqrt();
+        }
+        public DataFrame std(){
+            DataFrame output= new DataFrame();
+            Setup(output);
+            for(int a=0;a<data.size();a++){
+                ArrayList<Value> temp= new ArrayList<>();
+                for(int b =0;b<data.get(a).Table.size();b++){
+                    if(Cols.contains(data.get(a).names.get(b))){
+                        temp.add(data.get(a).Table.get(b).get(0));
+                        continue;
+                    }
+                    if(isNumber(data.get(a).Table.get(b).get(0))) {
+                        temp.add(stdOfArray(data.get(a).Table.get(b)));
+                    }
+                }
+                output.addV(temp);
+            }
+            return output;
+        }
+        public DataFrame sum(){
+            DataFrame output= new DataFrame();
+            Setup(output);
+            for(int a=0;a<data.size();a++){
+                ArrayList<Value> temp= new ArrayList<>();
+                for(int b =0;b<data.get(a).Table.size();b++){
+                    if(Cols.contains(data.get(a).names.get(b))){
+                        temp.add(data.get(a).Table.get(b).get(0));
+                        continue;
+                    }
+                    if(isNumber(data.get(a).Table.get(b).get(0))) {
+                        temp.add(sumOfArray(data.get(a).Table.get(b)));
+                    }
+                }
+                output.addV(temp);
+            }
+            return output;
+        }
+        public DataFrame var(){
+            DataFrame output= new DataFrame();
+            Setup(output);
+            for(int a=0;a<data.size();a++){
+                ArrayList<Value> temp= new ArrayList<>();
+                for(int b =0;b<data.get(a).Table.size();b++){
+                    if(Cols.contains(data.get(a).names.get(b))){
+                        temp.add(data.get(a).Table.get(b).get(0));
+                        continue;
+                    }
+                    if(isNumber(data.get(a).Table.get(b).get(0))) {
+                        temp.add(varOfArray(data.get(a).Table.get(b)));
+                    }
+                }
+                output.addV(temp);
+            }
+            return output;
+        }
+        public DataFrame apply(Applyable appl){
+            DataFrame output= new DataFrame(data.get(0).names.toArray(new String[0]),data.get(0).types);
+            for(int a=0;a<data.size();a++){
+                output.sum(appl.apply(data.get(a)));
+            }
+            return output;
+        }
     }
 }

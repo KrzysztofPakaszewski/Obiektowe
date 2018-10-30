@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class DateTimeValue extends Value {
-    private SimpleDateFormat DateFormat = new SimpleDateFormat("y MM dd HH:mm:ss");
+    private SimpleDateFormat DateFormat = new SimpleDateFormat("y-MM-dd");
     private final Date data;
     public DateTimeValue(long a){
         data = new Date(a);
@@ -49,6 +49,7 @@ public class DateTimeValue extends Value {
     public  Value pow(Value v){
         return null;
     }
+    public Value sqrt(){return null;}
     public  boolean equals(Value v){
         return this.toString().equals(v.toString());
     }
@@ -75,7 +76,7 @@ public class DateTimeValue extends Value {
         return !this.equals(v);
     }
     public  boolean equals(Object other){
-        return data.equals(other);
+        return equals((Value)other);
     }
     public  int hashCode(){
         return data.hashCode();

@@ -15,20 +15,21 @@ public class DoubleValue extends Value{
         return data.toString();
     }
     public  Value add(Value v) {
-        return new DoubleValue(data + Float.parseFloat(v.toString()));
+        return new DoubleValue(data + Double.parseDouble(v.toString()));
     }
     public  Value sub(Value v){
-        return new DoubleValue(data - Float.parseFloat(v.toString()));
+        return new DoubleValue(data - Double.parseDouble(v.toString()));
     }
     public  Value mul(Value v){
-        return new DoubleValue(data * Float.parseFloat(v.toString()));
+        return new DoubleValue(data * Double.parseDouble(v.toString()));
     }
     public  Value div(Value v){
-        return new DoubleValue(data / Float.parseFloat(v.toString()));
+        return new DoubleValue(data / Double.parseDouble(v.toString()));
     }
     public  Value pow(Value v){
-        return new DoubleValue((int) Math.pow(data, Float.parseFloat(v.toString())));
+        return new DoubleValue( Math.pow(data, Double.parseDouble(v.toString())));
     }
+    public Value sqrt(){return new DoubleValue( Math.sqrt(data));}
     public  boolean equals(Value v){
         return this.toString().equals(v.toString());
     }
@@ -42,7 +43,7 @@ public class DoubleValue extends Value{
         return !this.equals(v);
     }
     public  boolean equals(Object other){
-        return data.equals(other);
+        return equals((Value)other);
     }
     public  int hashCode(){
         return data.hashCode();

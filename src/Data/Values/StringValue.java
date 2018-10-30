@@ -32,6 +32,7 @@ public class StringValue extends Value {
     public  Value pow(Value v){
         return null;
     }
+    public Value sqrt(){return null;}
     public  boolean equals(Value v){
         return this.toString().equals(v.toString());
     }
@@ -45,7 +46,7 @@ public class StringValue extends Value {
         return !this.equals(v);
     }
     public  boolean equals(Object other){
-        return data.equals(other);
+        return equals((Value)other);
     }
     public  int hashCode(){
         return data.hashCode();

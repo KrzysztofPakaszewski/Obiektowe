@@ -34,6 +34,7 @@ public final class C00Value extends Value {
     public Value mul(Value v){
         return null;
     }
+    public Value sqrt(){return null;}
     public Value div(Value v){
         return null;
 

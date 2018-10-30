@@ -27,8 +27,9 @@ public class FloatValue extends Value{
         return new FloatValue(data / Float.parseFloat(v.toString()));
     }
     public  Value pow(Value v){
-        return new FloatValue((int) Math.pow(data, Float.parseFloat(v.toString())));
+        return new FloatValue( Math.pow(data, Float.parseFloat(v.toString())));
     }
+    public Value sqrt(){return new FloatValue(Math.sqrt(data));}
     public  boolean equals(Value v){
         return this.toString().equals(v.toString());
     }
@@ -42,7 +43,7 @@ public class FloatValue extends Value{
         return !this.equals(v);
     }
     public  boolean equals(Object other){
-        return data.equals(other);
+        return equals((Value) other);
     }
     public  int hashCode(){
         return data.hashCode();

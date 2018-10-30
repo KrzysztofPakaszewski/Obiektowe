@@ -2,13 +2,16 @@ package Data.Values;
 
 import Data.C00Value;
 
-public abstract class Value {
+public abstract class Value implements Cloneable{
     private static IntegerValue instanceInteger = new IntegerValue(0);
     private static DoubleValue instanceDouble = new DoubleValue(0);
     private static FloatValue instanceFloat = new FloatValue(0);
     private static StringValue instanceString = new StringValue("");
     private static DateTimeValue instanceDate = new DateTimeValue();
     private static C00Value instanceC00Value = new C00Value(instanceInteger,0);
+    protected Value clone(){
+        return getInstance(this.getClass()).create(this.toString());
+    }
 
     public static Value getInstance(Class<? extends Value> clazz) {
         if(clazz.isInstance(instanceInteger)){
@@ -39,6 +42,7 @@ public abstract class Value {
     public abstract Value mul(Value v);
     public abstract Value div(Value v);
     public abstract Value pow(Value v);
+    public abstract Value sqrt();
     public abstract boolean equals(Value v);
     public abstract boolean lessOrEquals(Value v);
     public abstract boolean greaterOrEquals(Value v);
