@@ -1,5 +1,7 @@
 package Data.Values;
 
+import Data.Values.exceptions.InvalidOperation;
+
 public class StringValue extends Value {
     private final java.lang.String data;
     public StringValue(int a){
@@ -17,22 +19,36 @@ public class StringValue extends Value {
     public String toString(){
         return data;
     }
-    public  Value add(Value v) {
-        return new StringValue(data + v.toString());
+    public  Value add(Value v) throws InvalidOperation{
+        throw new InvalidOperation("add","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
+
     }
-    public  Value sub(Value v){
-        return null;
+    public  Value sub(Value v)throws InvalidOperation {
+        throw new InvalidOperation("sub","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
+
     }
-    public  Value mul(Value v){
-        return null;
+    public  Value mul(Value v)throws InvalidOperation{
+        throw new InvalidOperation("mul","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
+
     }
-    public  Value div(Value v){
-        return null;
+    public  Value div(Value v)throws InvalidOperation{
+        throw new InvalidOperation("div","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
+
     }
-    public  Value pow(Value v){
-        return null;
+    public  Value pow(Value v)throws InvalidOperation{
+        throw new InvalidOperation("pow","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
+
     }
-    public Value sqrt(){return null;}
+    public Value sqrt()throws InvalidOperation{
+        throw new InvalidOperation("sqrt","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"");
+
+    }
     public  boolean equals(Value v){
         return this.toString().equals(v.toString());
     }

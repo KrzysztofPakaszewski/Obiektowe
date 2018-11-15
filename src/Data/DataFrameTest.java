@@ -4,6 +4,7 @@ import Data.Values.DateTimeValue;
 import Data.Values.DoubleValue;
 import Data.Values.IntegerValue;
 import Data.Values.StringValue;
+import Data.Values.exceptions.InvalidData;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -214,12 +215,17 @@ class DataFrameTest {
                 "             j 30.751172395176567 -130695.91970544758 \n";
 
         DataFrame.Grouped df2= df.groupby("id");
-        assertEquals(max,df2.max().toString());
-        assertEquals(min,df2.min().toString());
-        assertEquals(mean,df2.mean().toString());
-        assertEquals(std,df2.std().toString());
-        assertEquals(var,df2.var().toString());
-        assertEquals(sum,df2.sum().toString());
+        try{
+            assertEquals(max,df2.max().toString());
+            assertEquals(min,df2.min().toString());
+            assertEquals(mean,df2.mean().toString());
+            assertEquals(std,df2.std().toString());
+            assertEquals(var,df2.var().toString());
+            assertEquals(sum,df2.sum().toString());
+        }
+        catch (InvalidData e){
+            fail();
+        }
 
     }
     @Test
@@ -246,12 +252,17 @@ class DataFrameTest {
                 new ArrayList<>(Arrays.asList(StringValue.class,
                         DateTimeValue.class,DoubleValue.class,DoubleValue.class)),true);
         DataFrame.Grouped df2 = mainframe.groupby(new String[]{"id","date"});
-        assertEquals(resultmax.toString(),df2.max().toString());
-        assertEquals(resultmin.toString(),df2.min().toString());
-        assertEquals(resultmean.toString(),df2.mean().toString());
-        //assertEquals(resultstd.toString(),df2.std().toString());
-        assertEquals(resultsum.toString(),df2.sum().toString());
-        //assertEquals(resultvar.toString(),df2.var().toString());
+        try {
+            assertEquals(resultmax.toString(),df2.max().toString());
+            assertEquals(resultmin.toString(),df2.min().toString());
+            assertEquals(resultmean.toString(), df2.mean().toString());
+            //assertEquals(resultstd.toString(),df2.std().toString());
+            assertEquals(resultsum.toString(), df2.sum().toString());
+            //assertEquals(resultvar.toString(),df2.var().toString());
+        }
+        catch (InvalidData e){
+            fail();
+        }
     }
 
 }

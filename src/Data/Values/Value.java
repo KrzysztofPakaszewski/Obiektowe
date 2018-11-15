@@ -1,6 +1,8 @@
 package Data.Values;
 
 import Data.C00Value;
+import Data.Values.exceptions.CannotCreateValueFromString;
+import Data.Values.exceptions.InvalidOperation;
 
 public abstract class Value implements Cloneable{
     private static IntegerValue instanceInteger = new IntegerValue(0);
@@ -10,7 +12,12 @@ public abstract class Value implements Cloneable{
     private static DateTimeValue instanceDate = new DateTimeValue();
     private static C00Value instanceC00Value = new C00Value(instanceInteger,0);
     protected Value clone(){
-        return getInstance(this.getClass()).create(this.toString());
+        try {
+            return getInstance(this.getClass()).create(this.toString());
+        }
+        catch (CannotCreateValueFromString e){
+            throw new RuntimeException("impossible to get");
+        }
     }
 
     public static Value getInstance(Class<? extends Value> clazz) {
@@ -37,12 +44,12 @@ public abstract class Value implements Cloneable{
     }
     @Override
     public abstract String toString();
-    public abstract Value add(Value v);
-    public abstract Value sub(Value v);
-    public abstract Value mul(Value v);
-    public abstract Value div(Value v);
-    public abstract Value pow(Value v);
-    public abstract Value sqrt();
+    public abstract Value add(Value v) throws InvalidOperation;
+    public abstract Value sub(Value v)throws InvalidOperation;
+    public abstract Value mul(Value v)throws InvalidOperation;
+    public abstract Value div(Value v)throws InvalidOperation;
+    public abstract Value pow(Value v)throws InvalidOperation;
+    public abstract Value sqrt()throws InvalidOperation;
     public abstract boolean equals(Value v);
     public abstract boolean lessOrEquals(Value v);
     public abstract boolean greaterOrEquals(Value v);
@@ -51,5 +58,5 @@ public abstract class Value implements Cloneable{
     public abstract boolean equals(Object other);
     @Override
     public abstract int hashCode();
-    public abstract Value create(String s);
+    public abstract Value create(String s) throws CannotCreateValueFromString;
 }

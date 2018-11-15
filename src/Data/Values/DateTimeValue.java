@@ -1,11 +1,14 @@
 package Data.Values;
 
+import Data.Values.exceptions.CannotCreateValueFromString;
+import Data.Values.exceptions.InvalidOperation;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class DateTimeValue extends Value {
-    private SimpleDateFormat DateFormat = new SimpleDateFormat("y-MM-dd");
+    public static SimpleDateFormat DateFormat = new SimpleDateFormat("y-MM-dd");
     private final Date data;
     public DateTimeValue(long a){
         data = new Date(a);
@@ -22,34 +25,47 @@ public class DateTimeValue extends Value {
     public DateTimeValue(double a){
         data = new Date((long)a);
     }
-    public DateTimeValue(String a){
+    public DateTimeValue(String a)throws CannotCreateValueFromString {
         try{
             data= DateFormat.parse(a);
         }
         catch (ParseException exc){
-            throw new RuntimeException("Unparseable string",exc);
+            throw new CannotCreateValueFromString("wrong format: ",a);
         }
 
     }
     public String toString(){
         return DateFormat.format(data);
     }
-    public  Value add(Value v) {
-        return null;
+    public  Value add(Value v) throws InvalidOperation {
+        throw new InvalidOperation("add","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
     }
-    public  Value sub(Value v){
-        return null;
+    public  Value sub(Value v)throws InvalidOperation{
+        throw new InvalidOperation("sub","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
+
     }
-    public  Value mul(Value v){
-        return null;
+    public  Value mul(Value v)throws InvalidOperation{
+        throw new InvalidOperation("mul","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
+
     }
-    public  Value div(Value v){
-        return null;
+    public  Value div(Value v)throws InvalidOperation{
+        throw new InvalidOperation("div","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
+
     }
-    public  Value pow(Value v){
-        return null;
+    public  Value pow(Value v)throws InvalidOperation{
+        throw new InvalidOperation("pow","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
+
     }
-    public Value sqrt(){return null;}
+    public Value sqrt()throws InvalidOperation{
+        throw new InvalidOperation("sqrt","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"")    ;
+
+    }
     public  boolean equals(Value v){
         return this.toString().equals(v.toString());
     }
@@ -59,7 +75,7 @@ public class DateTimeValue extends Value {
             temp= DateFormat.parse(v.toString());
         }
         catch (ParseException exc){
-            throw new RuntimeException("Unparseable string",exc);
+            throw new RuntimeException("argument is not a type of DateTimeValue",exc);
         }
         return data.compareTo(temp) <0 || this.equals(v);
     }
@@ -68,7 +84,7 @@ public class DateTimeValue extends Value {
             temp= DateFormat.parse(v.toString());
         }
         catch (ParseException exc){
-            throw new RuntimeException("Unparseable string",exc);
+            throw new RuntimeException("argument is not a type of DateTimeValue",exc);
         }
         return data.compareTo(temp) >0 || this.equals(v);
     }
@@ -81,7 +97,7 @@ public class DateTimeValue extends Value {
     public  int hashCode(){
         return data.hashCode();
     }
-    public  Value create(String s){
+    public  Value create(String s)throws CannotCreateValueFromString {
         return new DateTimeValue(s);
     }
 }

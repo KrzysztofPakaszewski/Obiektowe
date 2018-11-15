@@ -1,5 +1,6 @@
 package Data;
 
+import Data.Values.exceptions.CannotCreateValueFromString;
 import Data.Values.Value;
 
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ public class SparseDataFrame extends DataFrame{
             ArrayList<C00Value> temp = new ArrayList<>();
             data.add(temp);
         }
-        ArrayList<ArrayList<String>> temp = ReadFile(filePath,columntypes,header);
+        ArrayList<ArrayList<String>> temp = ReadFile(filePath);
         if(!temp.isEmpty()) {
             int a;
             String[] columnnames;
@@ -80,13 +81,17 @@ public class SparseDataFrame extends DataFrame{
 
     public void add(ArrayList<String> objects){
         if (types.size() == objects.size()) {
-            if(TypesMatch(objects)){
+            try{
                 for( int a =0; a< objects.size();a++){
                     if(!objects.get(a).equals(tohide.toString())){
                         data.get(a).add(new C00Value(Value.getInstance(types.get(a)).create(objects.get(a)),size));
                     }
                 }
                 size++;
+            }
+            catch (CannotCreateValueFromString e)
+            {
+                throw new RuntimeException(e.getMessage());
             }
         }
     }
@@ -134,14 +139,14 @@ public class SparseDataFrame extends DataFrame{
             }
             return tohide;
         }
-        return null;
+        throw new RuntimeException("cell on row:"+ row+" and col:" +col +" does not exist");
     }
     @Override
     public ArrayList<C00Value> get(String coln){
         if(!data.isEmpty() && names.contains(coln)) {
             return data.get(names.indexOf(coln));
         }
-        return null;
+        throw new RuntimeException("there is no such column");
     }
     @Override
     public SparseDataFrame get(String[] colnames, boolean copy){

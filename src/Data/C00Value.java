@@ -1,6 +1,8 @@
 package Data;
 
 import Data.Values.Value;
+import Data.Values.exceptions.CannotCreateValueFromString;
+import Data.Values.exceptions.InvalidOperation;
 
 import java.io.BufferedReader;
 import java.util.regex.Matcher;
@@ -25,22 +27,36 @@ public final class C00Value extends Value {
     public String toString(){
         return "("+row + "," + data + ")";
     }
-    public Value add(Value v){
-        return null;
-    }
-    public Value sub(Value v){
-        return null;
-    }
-    public Value mul(Value v){
-        return null;
-    }
-    public Value sqrt(){return null;}
-    public Value div(Value v){
-        return null;
+    public Value add(Value v) throws InvalidOperation{
+        throw new InvalidOperation("add","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
 
     }
-    public Value pow(Value v){
-        return null;
+    public Value sub(Value v)throws InvalidOperation{
+        throw new InvalidOperation("sub","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
+
+    }
+    public Value mul(Value v)throws InvalidOperation{
+        throw new InvalidOperation("mul","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
+
+    }
+    public Value sqrt()throws InvalidOperation{
+        throw new InvalidOperation("sqrt","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"");
+
+    }
+    public Value div(Value v)throws InvalidOperation{
+        throw new InvalidOperation("div","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
+
+
+    }
+    public Value pow(Value v)throws InvalidOperation{
+        throw new InvalidOperation("pow","("+this.getClass().getSimpleName()+")"
+                +this.toString(),"("+v.getClass().getSimpleName()+")"+v.toString());
+
 
     }
     public boolean equals(Value v){
@@ -63,7 +79,7 @@ public final class C00Value extends Value {
     public int hashCode(){
         return data.hashCode();
     }
-    public Value create(String s){
+    public Value create(String s) throws CannotCreateValueFromString {
         BufferedReader br;
         Pattern pattern =Pattern.compile("\\((.*?),(.*)\\)");
         Matcher m;
@@ -73,10 +89,10 @@ public final class C00Value extends Value {
             return new C00Value(Value.getInstance(data.getClass()).create(m.group(1)),Integer.parseInt(m.group(2)));
         }
         catch (NumberFormatException exc){
-            throw new RuntimeException("Wrong parameter");
+            throw new CannotCreateValueFromString("Wrong parameter",s);
         }
         catch (IndexOutOfBoundsException exc){
-            throw new RuntimeException("Wrong string");
+            throw new CannotCreateValueFromString("Wrong string",s);
         }
     }
 }
