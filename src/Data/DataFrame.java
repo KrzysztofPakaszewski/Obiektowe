@@ -547,7 +547,7 @@ public class DataFrame {
         if(names.contains(colname)) {
             int tmp=names.indexOf(colname);
             for(int a=0;a < Table.get(tmp).size();a++){
-                op.apply(this,tmp,a,val);
+                op.apply(this,a,tmp,val);
             }
         }
         else

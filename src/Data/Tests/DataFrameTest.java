@@ -1,10 +1,12 @@
-package Data;
+package Data.Tests;
 
+import Data.DataFrame;
 import Data.Values.DateTimeValue;
 import Data.Values.DoubleValue;
 import Data.Values.IntegerValue;
 import Data.Values.StringValue;
 import Data.Values.exceptions.InvalidData;
+import Data.Values.exceptions.InvalidOperation;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -261,6 +263,37 @@ class DataFrameTest {
             //assertEquals(resultvar.toString(),df2.var().toString());
         }
         catch (InvalidData e){
+            fail();
+        }
+    }
+    @Test
+    void TestColumnsOperations(){
+        DataFrame df = new DataFrame(new String[]{"A", "B", "C"},
+                new ArrayList<>(Arrays.asList(IntegerValue.class, DoubleValue.class, StringValue.class)));
+        df.add(new ArrayList<String>(Arrays.asList("1", "2.5", "auwn")));
+        df.add(new ArrayList<>(Arrays.asList("5", "5.23","other")));
+        df.add(new ArrayList<>(Arrays.asList("23", "12.42","next")));
+        df.add(new ArrayList<>(Arrays.asList("832", "14.2","teststring")));
+        String base = df.toString();
+        String afterMul= "             A              B              C \n" +
+                "             3            2.5           auwn \n" +
+                "            15           5.23          other \n" +
+                "            69          12.42           next \n" +
+                "          2496           14.2     teststring \n";
+        String afterAdd="             A              B              C \n" +
+                "             1            3.5           auwn \n" +
+                "             5          10.23          other \n" +
+                "            23          35.42           next \n" +
+                "           832          846.2     teststring \n";
+        try{
+            df.multiply("A",new IntegerValue(3));
+            assertEquals(afterMul,df.toString());
+            df.div("A",new IntegerValue(3));
+            assertEquals(base,df.toString());
+            df.add("B","A");
+            assertEquals(afterAdd,df.toString());
+        }
+        catch (InvalidOperation e){
             fail();
         }
     }

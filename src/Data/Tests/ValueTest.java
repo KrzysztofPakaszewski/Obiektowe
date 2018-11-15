@@ -1,5 +1,6 @@
-package Data.Values;
+package Data.Tests;
 
+import Data.Values.*;
 import Data.Values.exceptions.CannotCreateValueFromString;
 import Data.Values.exceptions.InvalidOperation;
 import org.junit.jupiter.api.Test;

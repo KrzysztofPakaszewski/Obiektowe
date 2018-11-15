@@ -1,8 +1,10 @@
-package Data;
+package Data.Tests;
 
+import Data.C00Value;
+import Data.DataFrame;
+import Data.SparseDataFrame;
 import Data.Values.DoubleValue;
 import Data.Values.IntegerValue;
-import Data.Values.Value;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -47,10 +49,10 @@ class SparseDataFrameTest {
         df.add(new ArrayList<>(Arrays.asList("0.0", "0.0","2.0")));
         ArrayList<C00Value> temp = new ArrayList<C00Value>();
         temp.addAll(Arrays.asList(new C00Value(new DoubleValue(5.21),1),new C00Value(new DoubleValue(2.0),4)));
-        assertEquals(temp.get(0).data.toString(),df.get("kol3").get(0).data.toString());
-        assertEquals(temp.get(0).row,df.get("kol3").get(0).row);
-        assertEquals(temp.get(1).data.toString(),df.get("kol3").get(1).data.toString());
-        assertEquals(temp.get(0).row,df.get("kol3").get(0).row);
+        assertEquals(temp.get(0).getData().toString(),df.get("kol3").get(0).getData().toString());
+        assertEquals(temp.get(0).getRow(),df.get("kol3").get(0).getRow());
+        assertEquals(temp.get(1).getData().toString(),df.get("kol3").get(1).getData().toString());
+        assertEquals(temp.get(0).getRow(),df.get("kol3").get(0).getRow());
     }
     @Test
     void testgetFunctionThatReturnsDataFrameShallowCopy(){
