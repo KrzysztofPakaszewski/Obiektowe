@@ -1,7 +1,7 @@
 package Data.Values;
 
-import Data.Values.exceptions.CannotCreateValueFromString;
-import Data.Values.exceptions.InvalidOperation;
+import Data.exceptions.CannotCreateValueFromString;
+import Data.exceptions.InvalidOperation;
 
 public class IntegerValue extends Value {
     private final java.lang.Integer data;

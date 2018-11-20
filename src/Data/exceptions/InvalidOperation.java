@@ -1,4 +1,4 @@
-package Data.Values.exceptions;
+package Data.exceptions;
 
 public class InvalidOperation extends Exception {
     public InvalidOperation(String operation,String arg,String arg2){

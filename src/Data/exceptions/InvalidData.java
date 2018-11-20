@@ -1,4 +1,4 @@
-package Data.Values.exceptions;
+package Data.exceptions;
 
 public class InvalidData extends Exception {
     public InvalidData(String column, int row,String data,String operation){

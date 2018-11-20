@@ -1,15 +1,17 @@
 package Data;
 
-import Data.Values.exceptions.CannotCreateValueFromString;
+import Data.exceptions.CannotCreateValueFromString;
 import Data.Values.Value;
+import Data.exceptions.Error;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class SparseDataFrame extends DataFrame{
 
     public static void main(String argv[]){
     }
-    public SparseDataFrame(DataFrame other, Value hide){
+    public SparseDataFrame(DataFrame other, Value hide)throws CannotCreateValueFromString,Error{
         super(other.names.toArray(new String[0]),other.types);
         for(int a =0; a< other.names.size();a++)
         {
@@ -35,7 +37,8 @@ public class SparseDataFrame extends DataFrame{
         tohide = hide;
     }
     public SparseDataFrame(){size=0;}
-    public SparseDataFrame(String filePath, ArrayList<Class<? extends Value>> columntypes, boolean header,Value hide){
+    public SparseDataFrame(String filePath,String[] columnnames, ArrayList<Class<? extends Value>> columntypes,Value hide)
+            throws IOException,CannotCreateValueFromString,Error{
         tohide=hide;
         size=0;
         for(int a =0; a< columntypes.size();a++)
@@ -45,19 +48,35 @@ public class SparseDataFrame extends DataFrame{
         }
         ArrayList<ArrayList<String>> temp = ReadFile(filePath);
         if(!temp.isEmpty()) {
-            int a;
-            String[] columnnames;
-            columnnames= handlingColumnNames(columntypes.size(), header, temp);
             for(int c =0; c< columntypes.size();c++)
             {
                 names.add(columnnames[c]);
             }
             types=columntypes;
-            if(header)
-                a=1;
-            else
-                a=0;
-            for(;a< temp.size();a++){
+            for(int a=1;a< temp.size();a++){
+                this.add(temp.get(a));
+            }
+        }
+    }
+    public SparseDataFrame(String filePath, ArrayList<Class<? extends Value>> columntypes,Value hide)
+        throws IOException,CannotCreateValueFromString,Error{
+        tohide=hide;
+        size=0;
+        for(int a =0; a< columntypes.size();a++)
+        {
+            ArrayList<C00Value> temp = new ArrayList<>();
+            data.add(temp);
+        }
+        ArrayList<ArrayList<String>> temp = ReadFile(filePath);
+        if(!temp.isEmpty()) {
+            String[] columnnames;
+            columnnames=temp.get(0).toArray(new String[0]);
+            for(int c =0; c< columntypes.size();c++)
+            {
+                names.add(columnnames[c]);
+            }
+            types=columntypes;
+            for(int a=1;a< temp.size();a++){
                 this.add(temp.get(a));
             }
         }
@@ -67,35 +86,17 @@ public class SparseDataFrame extends DataFrame{
     private ArrayList<ArrayList<C00Value>> data =
             new ArrayList<ArrayList<C00Value>>();
     private int size;
-
-    public void print(){
-        for(int a =0; a< data.size();a++)
-        {
-            System.out.print(names.get(a) + "\t");
-            for(int b =0; b< data.get(a).size();b++){
-                data.get(a).get(b).print();
-            }
-            System.out.println();
-        }
-    }
-
-    public void add(ArrayList<String> objects){
+    public void add(ArrayList<String> objects)throws CannotCreateValueFromString,Error{
         if (types.size() == objects.size()) {
-            try{
-                for( int a =0; a< objects.size();a++){
-                    if(!objects.get(a).equals(tohide.toString())){
-                        data.get(a).add(new C00Value(Value.getInstance(types.get(a)).create(objects.get(a)),size));
-                    }
+            for( int a =0; a< objects.size();a++){
+                if(!objects.get(a).equals(tohide.toString())){
+                    data.get(a).add(new C00Value(Value.getInstance(types.get(a)).create(objects.get(a)),size));
                 }
-                size++;
             }
-            catch (CannotCreateValueFromString e)
-            {
-                throw new RuntimeException(e.getMessage());
-            }
+            size++;
         }
     }
-    public DataFrame toDense(){
+    public DataFrame toDense()throws CannotCreateValueFromString,Error{
         DataFrame output = new DataFrame(names.toArray(new String [0]),types);
         for(int a=0; a< size; a++) {
             output.add(ilocArray(a));
@@ -127,7 +128,7 @@ public class SparseDataFrame extends DataFrame{
         return size;
     }
     @Override
-    public Value get(int row, int col){
+    public Value get(int row, int col)throws Error{
         if(row>=0 && row< this.size() && col>=0 && col < types.size()){
             if(col < data.size()) {
                 for (int a = 0; a < data.get(col).size(); a++) {
@@ -139,14 +140,14 @@ public class SparseDataFrame extends DataFrame{
             }
             return tohide;
         }
-        throw new RuntimeException("cell on row:"+ row+" and col:" +col +" does not exist");
+        throw new Error("cell on row:"+ row+" and col:" +col +" does not exist");
     }
     @Override
-    public ArrayList<C00Value> get(String coln){
+    public ArrayList<C00Value> get(String coln)throws Error{
         if(!data.isEmpty() && names.contains(coln)) {
             return data.get(names.indexOf(coln));
         }
-        throw new RuntimeException("there is no such column");
+        throw new Error("there is no such column");
     }
     @Override
     public SparseDataFrame get(String[] colnames, boolean copy){
@@ -175,7 +176,7 @@ public class SparseDataFrame extends DataFrame{
         return output;
     }
     @Override
-    public SparseDataFrame iloc(int i){
+    public SparseDataFrame iloc(int i)throws CannotCreateValueFromString,Error{
         if(!data.isEmpty() && i>=0 && i< size){
             SparseDataFrame output = new SparseDataFrame(names.toArray(new String [0]),types,this.tohide);
             ArrayList<String> temp = new ArrayList<>();
@@ -186,7 +187,7 @@ public class SparseDataFrame extends DataFrame{
         return new SparseDataFrame();
     }
     @Override
-    public SparseDataFrame iloc(int from, int to){
+    public SparseDataFrame iloc(int from, int to)throws CannotCreateValueFromString,Error{
         if(!data.isEmpty() && from>=0 && from < size && to >=0 && to < size && from <to){
             SparseDataFrame output = this.iloc(from);
             for(int a =from+1; a <= to;a++){

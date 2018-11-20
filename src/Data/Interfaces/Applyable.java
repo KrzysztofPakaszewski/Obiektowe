@@ -2,8 +2,8 @@ package Data.Interfaces;
 
 import Data.DataFrame;
 import Data.Values.Value;
-import Data.Values.exceptions.InvalidData;
-import Data.Values.exceptions.InvalidOperation;
+import Data.exceptions.InvalidData;
+import Data.exceptions.InvalidOperation;
 
 import java.util.ArrayList;
 

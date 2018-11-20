@@ -1,6 +1,6 @@
 package Data.Values;
 
-import Data.Values.exceptions.InvalidOperation;
+import Data.exceptions.InvalidOperation;
 
 public class StringValue extends Value {
     private final java.lang.String data;

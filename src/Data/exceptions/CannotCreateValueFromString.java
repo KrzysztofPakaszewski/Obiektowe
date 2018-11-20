@@ -1,4 +1,4 @@
-package Data.Values.exceptions;
+package Data.exceptions;
 
 public class CannotCreateValueFromString extends Exception {
     public CannotCreateValueFromString(String message, String arg){

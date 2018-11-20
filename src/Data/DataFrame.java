@@ -3,9 +3,10 @@ import Data.Interfaces.Applyable;
 import Data.Interfaces.Groubby;
 import Data.Interfaces.DataFrameColumnOperations;
 import Data.Values.*;
-import Data.Values.exceptions.CannotCreateValueFromString;
-import Data.Values.exceptions.InvalidData;
-import Data.Values.exceptions.InvalidOperation;
+import Data.exceptions.CannotCreateValueFromString;
+import Data.exceptions.Error;
+import Data.exceptions.InvalidData;
+import Data.exceptions.InvalidOperation;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -30,55 +31,43 @@ public class DataFrame {
             Table.add(new ArrayList<>());
         }
     }
-    public DataFrame(String filePath, ArrayList<Class<? extends Value>> columntypes, boolean header){
-        ArrayList<ArrayList<String>> temp = ReadFile(filePath);
+    public DataFrame(String filepath, String[] columnnames,ArrayList<Class<? extends Value>> columntypes)
+            throws Error,CannotCreateValueFromString,IOException{
+        ArrayList<ArrayList<String>> temp = ReadFile(filepath);
         if(!temp.isEmpty()) {
-            int a;
-            String[] columnnames;
-            columnnames= handlingColumnNames(columntypes.size(), header, temp);
             for(int c =0; c< columntypes.size();c++)
             {
                 names.add(columnnames[c]);
             }
             types= columntypes;
-            if(header)
-                a=1;
-            else
-                a=0;
-            for(;a< temp.size();a++){
+            for(int a=0;a< temp.size();a++){
+                this.add(temp.get(a));
+            }
+        }
+    }
+    public DataFrame(String filePath, ArrayList<Class<? extends Value>> columntypes)
+            throws Error,CannotCreateValueFromString,IOException{
+        ArrayList<ArrayList<String>> temp = ReadFile(filePath);
+        if(!temp.isEmpty()) {
+            String[] columnnames;
+            columnnames=temp.get(0).toArray(new String[0]);
+            for(int c =0; c< columntypes.size();c++)
+            {
+                names.add(columnnames[c]);
+            }
+            types= columntypes;
+            for(int a=1;a< temp.size();a++){
                 this.add(temp.get(a));
             }
         }
     }
 
-    String[] handlingColumnNames(int length, boolean header, ArrayList<ArrayList<String>> temp) {
-        String[] columnnames=new String[length];
-        if (header) {
-            columnnames=temp.get(0).toArray(new String[0]);
-        } else {
-            System.out.println("Enter column names");
-            try {
-                BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-                for (int b = 0; b < length; b++) {
-                    String line = br.readLine();
-                    columnnames[b] = line;
-                }
-                br.close();
-            }
-            catch (IOException exc){
-                System.out.println("Buffer error");
-            }
-        }
-        return columnnames;
-    }
-
-    ArrayList<ArrayList<String>> ReadFile(String filepath) {
+    ArrayList<ArrayList<String>> ReadFile(String filepath) throws IOException{
         BufferedReader br;
         FileInputStream fstream;
         Pattern pattern =Pattern.compile("(.*?),|(.+$)");
         Matcher m;
         ArrayList<ArrayList<String>> output = new ArrayList<>();
-        try {
             fstream = new FileInputStream(filepath);
             br = new BufferedReader(new InputStreamReader(fstream));
             String strLine;
@@ -99,37 +88,10 @@ public class DataFrame {
                 output.add(temp);
             }
             br.close();
-        }
-        catch (FileNotFoundException exc){
-            throw new RuntimeException("File not Found");
-        }
-        catch (IOException exc){
-            throw new RuntimeException("Stream error!");
-        }
-        catch(NumberFormatException exc){
-            throw new RuntimeException("Incorrect values for a type");
-        }
-
         return output;
     }
 
     public DataFrame(){}
-    public void print(){
-        for (String name : names) {
-            System.out.format( "%15s", name+ " ");
-        }
-        System.out.println();
-        if(!Table.isEmpty()){
-            for (int a= 0; a< Table.get(0).size();a++)
-            {
-                for (int b =0; b< Table.size();b++)
-                {
-                    System.out.format("%15s" ,Table.get(b).get(a).toString() + " ");
-                }
-                System.out.println();
-            }
-        }
-    }
     public String toString(){
         String output= new String();
         for (String name : names) {
@@ -175,9 +137,8 @@ public class DataFrame {
             }
         }
     }
-    public void add(ArrayList<String> objects){
+    public void add(ArrayList<String> objects)throws CannotCreateValueFromString, Error{
         if (types.size() == objects.size()) {
-            try {
                 if (Table.isEmpty()) {
                     for (int a = 0; a < types.size(); a++) {
                         ArrayList<Value> temp = new ArrayList<>();
@@ -189,13 +150,9 @@ public class DataFrame {
                         Table.get(a).add(Value.getInstance(types.get(a)).create(objects.get(a)));
                     }
                 }
-            }
-            catch (CannotCreateValueFromString e){
-                throw new RuntimeException(e.getMessage());
-            }
         }
         else{
-            throw new RuntimeException("Size does not match");
+            throw new Error("Size does not match");
         }
     }
     public int size(){
@@ -203,17 +160,20 @@ public class DataFrame {
             return Table.get(0).size();
         return 0;
     }
-    public Object get(int row, int col){
+    public Object get(int row, int col)throws Error{
         if(col>=0 && col<Table.size() && row<this.size() && row>=0){
             return Table.get(col).get(row);
         }
-        throw new RuntimeException("cell on row:"+ row+" and col:" +col +" does not exist");
+        throw new Error("cell on row:"+ row+" and col:" +col +" does not exist");
     }
-    public ArrayList<?> get(String colname){
+    public ArrayList<?> get(String colname)throws Error{
         if(!Table.isEmpty() && names.contains(colname)) {
             return Table.get(names.indexOf(colname));
         }
-        throw new RuntimeException("there is no such column");
+        if(!Table.isEmpty()) {
+            throw new Error("there is no such column");
+        }
+        throw new Error("Table is empty");
     }
 
     public DataFrame get(String [] cols, boolean copy){
@@ -240,7 +200,7 @@ public class DataFrame {
         return output;
     }
 
-    public DataFrame iloc(int i){
+    public DataFrame iloc(int i)throws Error,CannotCreateValueFromString{
         if(!Table.isEmpty() && i>=0 && i< Table.get(0).size()){
             DataFrame output = new DataFrame();
             output.names = (ArrayList<String>) names.clone();
@@ -264,7 +224,7 @@ public class DataFrame {
         }
         return new ArrayList<>();
     }
-    protected DataFrame sum(DataFrame other){
+    protected DataFrame sum(DataFrame other)throws Error,CannotCreateValueFromString{
         if(this.names.equals(other.names) && this.types.equals(other.types) && !other.Table.isEmpty()){
             for(int a=0; a < other.Table.get(0).size();a++){
                 ArrayList<String> temp = new ArrayList<>();
@@ -276,7 +236,7 @@ public class DataFrame {
         }
         return this;
     }
-    public DataFrame iloc(int from, int to){
+    public DataFrame iloc(int from, int to)throws Error,CannotCreateValueFromString{
         if(!Table.isEmpty() && from>=0 && from < this.size() && to >=0 && to < this.size() && from <to){
             DataFrame output = this.iloc(from);
             for(int a =from+1; a <= to;a++){
@@ -287,7 +247,7 @@ public class DataFrame {
         return new DataFrame();
     }
 
-    public Grouped groupby(String[] colname){
+    public Grouped groupby(String[] colname)throws Error{
         ArrayList<DataFrame> output = new ArrayList<>();
         for(int a =0;a<colname.length;a++){
             if(names.contains(colname[a])){
@@ -306,10 +266,10 @@ public class DataFrame {
         }
         return new Grouped(output,colname);
     }
-    public Grouped groupby(String a){
+    public Grouped groupby(String a)throws Error{
         return new Grouped(groupbyArray(a),a);
     }
-    private ArrayList<Value> getRow(int i){
+    private ArrayList<Value> getRow(int i)throws Error{
         if(i>=0 && i< this.size()){
             ArrayList<Value> output = new ArrayList<>();
             for(int a=0; a< Table.size();a++){
@@ -317,7 +277,7 @@ public class DataFrame {
             }
             return output;
         }
-        throw new RuntimeException("There is no row: "+ i);
+        throw new Error("There is no row: "+ i);
     }
     private boolean typesm(ArrayList<Value> row){
         for(int a=0;a<row.size();a++){
@@ -334,7 +294,7 @@ public class DataFrame {
             }
         }
     }
-    private ArrayList<DataFrame> groupbyArray(String colname){
+    private ArrayList<DataFrame> groupbyArray(String colname)throws Error{
         if(names.contains(colname) && !Table.isEmpty()){
             int indexOfCol= names.indexOf(colname);
             HashMap map = new HashMap();
@@ -351,7 +311,7 @@ public class DataFrame {
             }
             return output;
         }
-        throw new RuntimeException("Column not found");
+        throw new Error("Column not found");
     }
     public class Grouped implements Groubby{
         ArrayList<DataFrame> data;
@@ -375,7 +335,7 @@ public class DataFrame {
                     apl.operate(df,temp,b);
                 }
                 catch (InvalidOperation e){
-                    throw new RuntimeException("impossible to get");
+
                 }
             }
             output.addV(temp);
@@ -438,7 +398,7 @@ public class DataFrame {
                 LoopAppl(object,output,this);
                 return output;
             }
-            public void operate(DataFrame df,ArrayList<Value> temp, int b){
+            public void operate(DataFrame df,ArrayList<Value> temp, int b) throws InvalidOperation{
                 Value max= df.Table.get(b).get(0);
                 for(int c =1;c<df.Table.get(b).size();c++){
                     if(df.Table.get(b).get(c).greaterOrEquals(max)){
@@ -454,7 +414,7 @@ public class DataFrame {
                 LoopAppl(object,output,this);
                 return output;
             }
-            public void operate(DataFrame df,ArrayList<Value> temp, int b){
+            public void operate(DataFrame df,ArrayList<Value> temp, int b)throws InvalidOperation{
                 Value min= df.Table.get(b).get(0);
                 for(int c =1;c<df.Table.get(b).size();c++){
                     if(df.Table.get(b).get(c).lessOrEquals(min)){
@@ -517,25 +477,25 @@ public class DataFrame {
             }
         }
         @Override
-        public DataFrame max()throws InvalidData{
+        public DataFrame max()throws InvalidData,Error,CannotCreateValueFromString{
             return this.apply(new Max());
         }
-        public DataFrame min()throws InvalidData{
+        public DataFrame min()throws InvalidData,Error,CannotCreateValueFromString{
             return this.apply(new Min());
         }
-        public DataFrame mean()throws InvalidData{
+        public DataFrame mean()throws InvalidData,Error,CannotCreateValueFromString{
             return this.apply(new Mean());
         }
-        public DataFrame std() throws InvalidData{
+        public DataFrame std() throws InvalidData,Error,CannotCreateValueFromString{
             return this.apply(new Std());
         }
-        public DataFrame sum()throws InvalidData{
+        public DataFrame sum()throws InvalidData,Error,CannotCreateValueFromString{
             return this.apply(new Sum());
         }
-        public DataFrame var()throws InvalidData{
+        public DataFrame var()throws InvalidData,Error,CannotCreateValueFromString{
             return this.apply(new Var());
         }
-        public DataFrame apply(Applyable appl)throws InvalidData{
+        public DataFrame apply(Applyable appl)throws InvalidData, Error,CannotCreateValueFromString{
             DataFrame output= appl.apply(data.get(0));
             for(int a=1;a<data.size();a++){
                 output.sum(appl.apply(data.get(a)));
@@ -543,7 +503,7 @@ public class DataFrame {
             return output;
         }
     }
-    void Loop(DataFrameColumnOperations op, String colname, Value val)throws InvalidOperation{
+    void Loop(DataFrameColumnOperations op, String colname, Value val)throws InvalidOperation,Error{
         if(names.contains(colname)) {
             int tmp=names.indexOf(colname);
             for(int a=0;a < Table.get(tmp).size();a++){
@@ -551,8 +511,8 @@ public class DataFrame {
             }
         }
         else
-            throw new RuntimeException("Column not fouond");
-    }void Loop(DataFrameColumnOperations op, String colname, String colname2)throws InvalidOperation{
+            throw new Error("Column not fouond");
+    }void Loop(DataFrameColumnOperations op, String colname, String colname2)throws InvalidOperation,Error{
         if(names.contains(colname) && names.contains(colname2)) {
             int tmp=names.indexOf(colname);
             int other = names.indexOf(colname2);
@@ -561,7 +521,7 @@ public class DataFrame {
             }
         }
         else
-            throw new RuntimeException("Column not fouond");
+            throw new Error("Column not fouond");
     }
     class Multiply implements DataFrameColumnOperations {
         public void apply(DataFrame object, int row, int col, Value val)throws InvalidOperation{
@@ -588,34 +548,34 @@ public class DataFrame {
             object.Table.get(col).set(row,object.Table.get(col).get(row).pow(val));
         }
     }
-    public void multiply(String colname,Value val) throws InvalidOperation{
+    public void multiply(String colname,Value val) throws InvalidOperation,Error{
         Loop(new Multiply(),colname,val);
     }
-    public void add(String colname,Value val) throws InvalidOperation{
+    public void add(String colname,Value val) throws InvalidOperation,Error{
         Loop(new Add(),colname,val);
     }
-    public void sub(String colname,Value val) throws InvalidOperation{
+    public void sub(String colname,Value val) throws InvalidOperation,Error{
         Loop(new Sub(),colname,val);
     }
-    public void div(String colname,Value val) throws InvalidOperation{
+    public void div(String colname,Value val) throws InvalidOperation,Error{
         Loop(new Div(),colname,val);
     }
-    public void pow(String colname,Value val) throws InvalidOperation{
+    public void pow(String colname,Value val) throws InvalidOperation,Error{
         Loop(new Pow(),colname,val);
     }
-    public void multiply(String colname,String val) throws InvalidOperation{
+    public void multiply(String colname,String val) throws InvalidOperation,Error{
         Loop(new Multiply(),colname,val);
     }
-    public void add(String colname,String val) throws InvalidOperation{
+    public void add(String colname,String val) throws InvalidOperation,Error{
         Loop(new Add(),colname,val);
     }
-    public void sub(String colname,String val) throws InvalidOperation{
+    public void sub(String colname,String val) throws InvalidOperation,Error{
         Loop(new Sub(),colname,val);
     }
-    public void div(String colname,String val) throws InvalidOperation{
+    public void div(String colname,String val) throws InvalidOperation,Error{
         Loop(new Div(),colname,val);
     }
-    public void pow(String colname,String val) throws InvalidOperation{
+    public void pow(String colname,String val) throws InvalidOperation,Error{
         Loop(new Pow(),colname,val);
     }
 }

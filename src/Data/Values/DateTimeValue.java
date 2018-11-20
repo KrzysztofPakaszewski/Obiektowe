@@ -1,7 +1,8 @@
 package Data.Values;
 
-import Data.Values.exceptions.CannotCreateValueFromString;
-import Data.Values.exceptions.InvalidOperation;
+import Data.exceptions.CannotCreateValueFromString;
+import Data.exceptions.Error;
+import Data.exceptions.InvalidOperation;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -69,22 +70,23 @@ public class DateTimeValue extends Value {
     public  boolean equals(Value v){
         return this.toString().equals(v.toString());
     }
-    public  boolean lessOrEquals(Value v){
+    public  boolean lessOrEquals(Value v)throws InvalidOperation{
         Date temp ;
         try{
             temp= DateFormat.parse(v.toString());
         }
         catch (ParseException exc){
-            throw new RuntimeException("argument is not a type of DateTimeValue",exc);
+            throw new InvalidOperation("<=",this.toString(),v.toString());
         }
         return data.compareTo(temp) <0 || this.equals(v);
     }
-    public  boolean greaterOrEquals(Value v){Date temp ;
+    public  boolean greaterOrEquals(Value v)throws InvalidOperation{
+        Date temp ;
         try{
             temp= DateFormat.parse(v.toString());
         }
         catch (ParseException exc){
-            throw new RuntimeException("argument is not a type of DateTimeValue",exc);
+            throw new InvalidOperation("=>",this.toString(),v.toString());
         }
         return data.compareTo(temp) >0 || this.equals(v);
     }

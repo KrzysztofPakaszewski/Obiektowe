@@ -1,8 +1,9 @@
 package Data.Values;
 
 import Data.C00Value;
-import Data.Values.exceptions.CannotCreateValueFromString;
-import Data.Values.exceptions.InvalidOperation;
+import Data.exceptions.CannotCreateValueFromString;
+import Data.exceptions.Error;
+import Data.exceptions.InvalidOperation;
 
 public abstract class Value implements Cloneable{
     private static IntegerValue instanceInteger = new IntegerValue(0);
@@ -11,16 +12,19 @@ public abstract class Value implements Cloneable{
     private static StringValue instanceString = new StringValue("");
     private static DateTimeValue instanceDate = new DateTimeValue();
     private static C00Value instanceC00Value = new C00Value(instanceInteger,0);
-    protected Value clone(){
+    protected Value clone()throws CloneNotSupportedException{
         try {
             return getInstance(this.getClass()).create(this.toString());
         }
         catch (CannotCreateValueFromString e){
             throw new RuntimeException("impossible to get");
         }
+        catch (Error e){
+            throw new CloneNotSupportedException();
+        }
     }
 
-    public static Value getInstance(Class<? extends Value> clazz) {
+    public static Value getInstance(Class<? extends Value> clazz) throws Error{
         if(clazz.isInstance(instanceInteger)){
             return instanceInteger;
         }
@@ -39,7 +43,7 @@ public abstract class Value implements Cloneable{
             return instanceC00Value;
         }
         else{
-            throw new RuntimeException("Unsupported type");
+            throw new Error("Unsupported type");
         }
     }
     @Override
@@ -51,12 +55,12 @@ public abstract class Value implements Cloneable{
     public abstract Value pow(Value v)throws InvalidOperation;
     public abstract Value sqrt()throws InvalidOperation;
     public abstract boolean equals(Value v);
-    public abstract boolean lessOrEquals(Value v);
-    public abstract boolean greaterOrEquals(Value v);
+    public abstract boolean lessOrEquals(Value v)throws InvalidOperation;
+    public abstract boolean greaterOrEquals(Value v)throws InvalidOperation;
     public abstract boolean notEquals(Value v);
     @Override
     public abstract boolean equals(Object other);
     @Override
     public abstract int hashCode();
-    public abstract Value create(String s) throws CannotCreateValueFromString;
+    public abstract Value create(String s) throws CannotCreateValueFromString,Error;
 }

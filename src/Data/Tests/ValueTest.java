@@ -1,8 +1,8 @@
 package Data.Tests;
 
 import Data.Values.*;
-import Data.Values.exceptions.CannotCreateValueFromString;
-import Data.Values.exceptions.InvalidOperation;
+import Data.exceptions.CannotCreateValueFromString;
+import Data.exceptions.InvalidOperation;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,7 +61,7 @@ class ValueTest {
             DateTimeValue tmp9 = new DateTimeValue("1999-10-16");
             assertTrue(tmp8.lessOrEquals(tmp9));
         }
-        catch (CannotCreateValueFromString e){
+        catch (Exception e){
             fail();
         }
         String a = "56";
