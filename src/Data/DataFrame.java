@@ -23,6 +23,9 @@ public class DataFrame {
     protected ArrayList<Class<? extends Value>> types = new ArrayList<>();
     private ArrayList<ArrayList<Value>> Table= new ArrayList<>();
 
+    public ArrayList<String> getNames(){
+        return names;
+    }
     public DataFrame(String[] columnnames, ArrayList<Class<? extends Value>> columntypes){
         for(int a =0; a< columntypes.size();a++)
         {
