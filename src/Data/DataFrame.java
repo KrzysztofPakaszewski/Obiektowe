@@ -52,6 +52,9 @@ public class DataFrame {
             throws Error,CannotCreateValueFromString,IOException{
         ArrayList<ArrayList<String>> temp = ReadFile(filePath);
         if(!temp.isEmpty()) {
+            if(temp.get(0).size()!= columntypes.size()){
+                throw new Error("Size does not mach");
+            }
             String[] columnnames;
             columnnames=temp.get(0).toArray(new String[0]);
             for(int c =0; c< columntypes.size();c++)
@@ -316,14 +319,14 @@ public class DataFrame {
         }
         throw new Error("Column not found");
     }
-    public class Grouped implements Groubby{
+    public static class Grouped implements Groubby{
         ArrayList<DataFrame> data;
         ArrayList<String> Cols=new ArrayList<>();
-        private Grouped(ArrayList<DataFrame> input,String[] colsgr){
+        public Grouped(ArrayList<DataFrame> input,String[] colsgr){
             data=input;
             Cols.addAll(Arrays.asList(colsgr));
         }
-        private Grouped(ArrayList<DataFrame> input,String colsgr){
+        public Grouped(ArrayList<DataFrame> input,String colsgr){
             data=input;
             Cols.add(colsgr);
         }
