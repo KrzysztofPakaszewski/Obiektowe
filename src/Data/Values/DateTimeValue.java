@@ -9,8 +9,18 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class DateTimeValue extends Value {
-    public static SimpleDateFormat DateFormat = new SimpleDateFormat("y-MM-dd");
+    private SimpleDateFormat DateFormat = new SimpleDateFormat("y-MM-dd");
     private final Date data;
+    public DateTimeValue(String a, SimpleDateFormat format)throws  CannotCreateValueFromString{
+        DateFormat= format;
+        try{
+            data= DateFormat.parse(a);
+        }
+        catch (ParseException exc){
+            throw new CannotCreateValueFromString("wrong format: ",a);
+        }
+
+    }
     public DateTimeValue(long a){
         data = new Date(a);
     }
