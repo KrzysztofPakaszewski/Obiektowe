@@ -3,7 +3,7 @@ package Data.Values;
 import Data.exceptions.InvalidOperation;
 
 public class StringValue extends Value {
-    private final java.lang.String data;
+    private final String data;
     public StringValue(int a){
         data = Integer.toString(a);
     }

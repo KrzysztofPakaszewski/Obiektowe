@@ -4,7 +4,7 @@ import Data.exceptions.CannotCreateValueFromString;
 import Data.exceptions.InvalidOperation;
 
 public class FloatValue extends Value{
-    private final java.lang.Float data;
+    private final float data;
     public FloatValue(int a){
         data = (float)a;
     }
@@ -15,7 +15,7 @@ public class FloatValue extends Value{
         data = a;
     }
     public String toString(){
-        return data.toString();
+        return ((Float)data).toString();
     }
     public  Value add(Value v) throws InvalidOperation{
         try{
@@ -86,7 +86,7 @@ public class FloatValue extends Value{
         return equals((Value) other);
     }
     public  int hashCode(){
-        return data.hashCode();
+        return ((Float)data).hashCode();
     }
     public  Value create(String s)throws CannotCreateValueFromString {
         try{

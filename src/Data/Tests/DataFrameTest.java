@@ -295,8 +295,9 @@ class DataFrameTest {
             assertEquals(resultmax.toString(),df2.max().toString());
             assertEquals(resultmin.toString(),df2.min().toString());
             assertEquals(resultmean.toString(), df2.mean().toString());
-            //assertEquals(resultstd.toString(),df2.std().toString());
             assertEquals(resultsum.toString(), df2.sum().toString());
+            //Wyniki nieznacznie się różnią
+            //assertEquals(resultstd.toString(),df2.std().toString());
             //assertEquals(resultvar.toString(),df2.var().toString());
         }
         catch (InvalidData e){

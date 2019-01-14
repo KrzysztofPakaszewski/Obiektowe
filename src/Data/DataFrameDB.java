@@ -20,7 +20,7 @@ public class DataFrameDB extends DataFrame{
             }
             catch (SQLException e){
                 if(a==2){
-                    throw new Error("Connection cannot be established");
+                    throw new Error("Connection cannot be established:\t"+e.getMessage());
                 }
             }catch (Exception e){
                 throw new Error("Class Driver not found");

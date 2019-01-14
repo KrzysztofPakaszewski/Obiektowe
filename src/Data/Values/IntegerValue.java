@@ -4,7 +4,7 @@ import Data.exceptions.CannotCreateValueFromString;
 import Data.exceptions.InvalidOperation;
 
 public class IntegerValue extends Value {
-    private final java.lang.Integer data;
+    private final int data;
     public IntegerValue(int a){
         data = a;
     }
@@ -15,7 +15,7 @@ public class IntegerValue extends Value {
         data = (int)a;
     }
     public String toString(){
-        return data.toString();
+        return ((Integer)data).toString();
     }
     public  Value add(Value v) throws InvalidOperation{
         try{
@@ -81,7 +81,7 @@ public class IntegerValue extends Value {
         return equals((Value)other);
     }
     public  int hashCode(){
-        return data.hashCode();
+        return ((Integer)data).hashCode();
     }
     public  Value create(String s)throws CannotCreateValueFromString {
         try{

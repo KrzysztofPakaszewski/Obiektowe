@@ -6,6 +6,7 @@ import Data.exceptions.Error;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class SparseDataFrame extends DataFrame{
 
@@ -46,17 +47,9 @@ public class SparseDataFrame extends DataFrame{
             ArrayList<C00Value> temp = new ArrayList<>();
             data.add(temp);
         }
-        ArrayList<ArrayList<String>> temp = ReadFile(filePath);
-        if(!temp.isEmpty()) {
-            for(int c =0; c< columntypes.size();c++)
-            {
-                names.add(columnnames[c]);
-            }
-            types=columntypes;
-            for(int a=1;a< temp.size();a++){
-                this.add(temp.get(a));
-            }
-        }
+        types=columntypes;
+        names=new ArrayList<>(Arrays.asList(columnnames));
+        ReadFile(filePath,false);
     }
     public SparseDataFrame(String filePath, ArrayList<Class<? extends Value>> columntypes,Value hide)
         throws IOException,CannotCreateValueFromString,Error{
@@ -67,19 +60,8 @@ public class SparseDataFrame extends DataFrame{
             ArrayList<C00Value> temp = new ArrayList<>();
             data.add(temp);
         }
-        ArrayList<ArrayList<String>> temp = ReadFile(filePath);
-        if(!temp.isEmpty()) {
-            String[] columnnames;
-            columnnames=temp.get(0).toArray(new String[0]);
-            for(int c =0; c< columntypes.size();c++)
-            {
-                names.add(columnnames[c]);
-            }
-            types=columntypes;
-            for(int a=1;a< temp.size();a++){
-                this.add(temp.get(a));
-            }
-        }
+        types=columntypes;
+        ReadFile(filePath,true);
     }
 
     private Value tohide;

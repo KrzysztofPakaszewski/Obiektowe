@@ -9,5 +9,5 @@ import java.util.ArrayList;
 
 public interface Applyable {
     DataFrame apply(DataFrame object)throws InvalidData;
-    void operate(DataFrame df,ArrayList<Value> temp, int b)throws InvalidData, InvalidOperation;
+    void operate(DataFrame df,ArrayList<Value> temp, int b,int a)throws InvalidData, InvalidOperation;
 }

@@ -9,36 +9,26 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class DateTimeValue extends Value {
-    private SimpleDateFormat DateFormat = new SimpleDateFormat("y-MM-dd");
-    private final Date data;
-    public DateTimeValue(String a, SimpleDateFormat format)throws  CannotCreateValueFromString{
-        DateFormat= format;
-        try{
-            data= DateFormat.parse(a);
-        }
-        catch (ParseException exc){
-            throw new CannotCreateValueFromString("wrong format: ",a);
-        }
-
-    }
+    public static SimpleDateFormat DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private final String data;
     public DateTimeValue(long a){
-        data = new Date(a);
+        data = DateFormat.format(new Date(a));
     }
     public DateTimeValue(){
-        data = new Date();
+        data = DateFormat.format(new Date());
     }
     public DateTimeValue(float a){
-        data = new Date((long)a);
+        data = DateFormat.format(new Date((long)a));
     }
     public DateTimeValue(int a){
-        data = new Date(a);
+        data = DateFormat.format(new Date(a));
     }
     public DateTimeValue(double a){
-        data = new Date((long)a);
+        data = DateFormat.format(new Date((long)a));
     }
     public DateTimeValue(String a)throws CannotCreateValueFromString {
         try{
-            data= DateFormat.parse(a);
+            data= DateFormat.format(DateFormat.parse(a));
         }
         catch (ParseException exc){
             throw new CannotCreateValueFromString("wrong format: ",a);
@@ -46,7 +36,7 @@ public class DateTimeValue extends Value {
 
     }
     public String toString(){
-        return DateFormat.format(data);
+        return data;
     }
     public  Value add(Value v) throws InvalidOperation {
         throw new InvalidOperation("add","("+this.getClass().getSimpleName()+")"
@@ -78,27 +68,27 @@ public class DateTimeValue extends Value {
 
     }
     public  boolean equals(Value v){
-        return this.toString().equals(v.toString());
+        return data.equals(v.toString());
     }
     public  boolean lessOrEquals(Value v)throws InvalidOperation{
         Date temp ;
         try{
             temp= DateFormat.parse(v.toString());
+            return DateFormat.parse(data).compareTo(temp) <0 || this.equals(v);
         }
         catch (ParseException exc){
             throw new InvalidOperation("<=",this.toString(),v.toString());
         }
-        return data.compareTo(temp) <0 || this.equals(v);
     }
     public  boolean greaterOrEquals(Value v)throws InvalidOperation{
         Date temp ;
         try{
             temp= DateFormat.parse(v.toString());
+            return DateFormat.parse(data).compareTo(temp) >0 || this.equals(v);
         }
         catch (ParseException exc){
             throw new InvalidOperation("=>",this.toString(),v.toString());
         }
-        return data.compareTo(temp) >0 || this.equals(v);
     }
     public  boolean notEquals(Value v){
         return !this.equals(v);

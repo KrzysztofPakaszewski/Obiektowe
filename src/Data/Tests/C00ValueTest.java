@@ -1,5 +1,6 @@
-package Data;
+package Data.Tests;
 
+import Data.C00Value;
 import Data.Values.DoubleValue;
 import Data.Values.IntegerValue;
 import Data.Values.StringValue;

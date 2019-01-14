@@ -4,7 +4,7 @@ import Data.exceptions.CannotCreateValueFromString;
 import Data.exceptions.InvalidOperation;
 
 public class DoubleValue extends Value{
-    private final java.lang.Double data;
+    private final double data;
     public DoubleValue(int a){
         data = (double)a;
     }
@@ -15,7 +15,7 @@ public class DoubleValue extends Value{
         data = (double)a;
     }
     public String toString(){
-        return data.toString();
+        return ((Double)data).toString();
     }
     public  Value add(Value v) throws InvalidOperation{
         try{
@@ -86,7 +86,7 @@ public class DoubleValue extends Value{
         return equals((Value)other);
     }
     public  int hashCode(){
-        return data.hashCode();
+        return ((Double)data).hashCode();
     }
     public  Value create(String s)throws CannotCreateValueFromString {
         try{

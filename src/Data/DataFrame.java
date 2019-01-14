@@ -21,7 +21,7 @@ public class DataFrame {
     }
     protected ArrayList<String> names = new ArrayList<String>();
     protected ArrayList<Class<? extends Value>> types = new ArrayList<>();
-    private ArrayList<ArrayList<Value>> Table= new ArrayList<>();
+    protected ArrayList<ArrayList<Value>> Table= new ArrayList<>();
 
     public ArrayList<String> getNames(){
         return names;
@@ -36,65 +36,45 @@ public class DataFrame {
     }
     public DataFrame(String filepath, String[] columnnames,ArrayList<Class<? extends Value>> columntypes)
             throws Error,CannotCreateValueFromString,IOException{
-        ArrayList<ArrayList<String>> temp = ReadFile(filepath);
-        if(!temp.isEmpty()) {
-            for(int c =0; c< columntypes.size();c++)
-            {
-                names.add(columnnames[c]);
-            }
-            types= columntypes;
-            for(int a=0;a< temp.size();a++){
-                this.add(temp.get(a));
-            }
-        }
+        types=columntypes;
+        names= new ArrayList<>(Arrays.asList(columnnames));
+        ReadFile(filepath,false);
     }
     public DataFrame(String filePath, ArrayList<Class<? extends Value>> columntypes)
             throws Error,CannotCreateValueFromString,IOException{
-        ArrayList<ArrayList<String>> temp = ReadFile(filePath);
-        if(!temp.isEmpty()) {
-            if(temp.get(0).size()!= columntypes.size()){
-                throw new Error("Size does not mach");
-            }
-            String[] columnnames;
-            columnnames=temp.get(0).toArray(new String[0]);
-            for(int c =0; c< columntypes.size();c++)
-            {
-                names.add(columnnames[c]);
-            }
-            types= columntypes;
-            for(int a=1;a< temp.size();a++){
-                this.add(temp.get(a));
-            }
-        }
+        types= columntypes;
+        ReadFile(filePath,true);
     }
 
-    ArrayList<ArrayList<String>> ReadFile(String filepath) throws IOException{
+    void ReadFile(String filepath,boolean header)
+            throws IOException , CannotCreateValueFromString,Error{
         BufferedReader br;
         FileInputStream fstream;
         Pattern pattern =Pattern.compile("(.*?),|(.+$)");
-        Matcher m;
-        ArrayList<ArrayList<String>> output = new ArrayList<>();
-            fstream = new FileInputStream(filepath);
-            br = new BufferedReader(new InputStreamReader(fstream));
-            String strLine;
-            while ((strLine = br.readLine()) != null)   {
-                ArrayList<String> allMatches = new ArrayList<>();
-                ArrayList<String> temp= new ArrayList<>();
-                m= pattern.matcher(strLine);
-                while(m.find()){
-                    if(m.group(1) != null)
-                        allMatches.add(m.group(1));
-                    else{
-                        allMatches.add(m.group());
-                    }
+        Matcher matcher;
+        boolean firstLine=true;
+        fstream = new FileInputStream(filepath);
+        br = new BufferedReader(new InputStreamReader(fstream));
+        String strLine;
+        while ((strLine = br.readLine()) != null)   {
+            ArrayList<String> allMatches = new ArrayList<>();
+            matcher= pattern.matcher(strLine);
+            while(matcher.find()){
+                if(matcher.group(1) != null)
+                    allMatches.add(matcher.group(1));
+                else{
+                    allMatches.add(matcher.group());
                 }
-                for (int a = 0; a < allMatches.size(); a++) {
-                    temp.add(allMatches.get(a));
-                }
-                output.add(temp);
             }
-            br.close();
-        return output;
+            if(firstLine && header){
+                names=allMatches;
+            }
+            else {
+                this.add(allMatches);
+            }
+            firstLine=false;
+        }
+        br.close();
     }
 
     public DataFrame(){}
@@ -275,7 +255,7 @@ public class DataFrame {
     public Grouped groupby(String a)throws Error{
         return new Grouped(groupbyArray(a),a);
     }
-    private ArrayList<Value> getRow(int i)throws Error{
+    protected ArrayList<Value> getRow(int i)throws Error{
         if(i>=0 && i< this.size()){
             ArrayList<Value> output = new ArrayList<>();
             for(int a=0; a< Table.size();a++){
@@ -293,7 +273,7 @@ public class DataFrame {
         }
         return true;
     }
-    private void addV(ArrayList<Value> row){
+    protected void addV(ArrayList<Value> row){
         if(row.size()== types.size() && typesm(row)){
             for(int a=0;a<row.size();a++){
                 Table.get(a).add(row.get(a));
@@ -320,8 +300,12 @@ public class DataFrame {
         throw new Error("Column not found");
     }
     public static class Grouped implements Groubby{
-        ArrayList<DataFrame> data;
+        ArrayList<? extends DataFrame> data;
         ArrayList<String> Cols=new ArrayList<>();
+        public Grouped(){
+            data=null;
+            Cols=null;
+        }
         public Grouped(ArrayList<DataFrame> input,String[] colsgr){
             data=input;
             Cols.addAll(Arrays.asList(colsgr));
@@ -330,15 +314,23 @@ public class DataFrame {
             data=input;
             Cols.add(colsgr);
         }
-        void LoopAppl(DataFrame df,DataFrame output, Applyable apl)throws InvalidData{
+        protected void LoopAppl(DataFrame df,DataFrame output, Applyable apl)throws InvalidData{
             ArrayList<Value> temp= new ArrayList<>();
+            while(temp.size()<output.names.size()){
+                temp.add(null);
+            }
+            int a =0;
             for(int b =0;b<df.Table.size();b++){
                 try {
                     if (Cols.contains(df.names.get(b))) {
-                        temp.add(df.Table.get(b).get(0));
+                        temp.set(a,df.Table.get(b).get(0));
+                        a++;
                         continue;
                     }
-                    apl.operate(df,temp,b);
+                    if(output.names.get(a).equals(df.names.get(b))) {
+                        apl.operate(df, temp, b, a);
+                        a++;
+                    }
                 }
                 catch (InvalidOperation e){
 
@@ -404,14 +396,14 @@ public class DataFrame {
                 LoopAppl(object,output,this);
                 return output;
             }
-            public void operate(DataFrame df,ArrayList<Value> temp, int b) throws InvalidOperation{
+            public void operate(DataFrame df,ArrayList<Value> temp, int b,int a) throws InvalidOperation{
                 Value max= df.Table.get(b).get(0);
                 for(int c =1;c<df.Table.get(b).size();c++){
                     if(df.Table.get(b).get(c).greaterOrEquals(max)){
                         max = df.Table.get(b).get(c);
                     }
                 }
-                temp.add(max);
+                temp.set(a,max);
             }
         }
         class Min implements Applyable{
@@ -420,14 +412,14 @@ public class DataFrame {
                 LoopAppl(object,output,this);
                 return output;
             }
-            public void operate(DataFrame df,ArrayList<Value> temp, int b)throws InvalidOperation{
+            public void operate(DataFrame df,ArrayList<Value> temp, int b,int a)throws InvalidOperation{
                 Value min= df.Table.get(b).get(0);
                 for(int c =1;c<df.Table.get(b).size();c++){
                     if(df.Table.get(b).get(c).lessOrEquals(min)){
                         min = df.Table.get(b).get(c);
                     }
                 }
-                temp.add(min);
+                temp.set(a,min);
             }
         }
         class Mean implements Applyable{
@@ -437,9 +429,9 @@ public class DataFrame {
                 LoopAppl(object,output,this);
                 return output;
             }
-            public void operate(DataFrame df,ArrayList<Value> temp, int b)throws InvalidData, InvalidOperation{
+            public void operate(DataFrame df,ArrayList<Value> temp, int b,int a)throws InvalidData, InvalidOperation{
                 if (isNumber(df.Table.get(b).get(0))) {
-                    temp.add(meanOfArray(df.Table.get(b),df.names.get(b)));
+                    temp.set(a,meanOfArray(df.Table.get(b),df.names.get(b)));
                 }
             }
         }
@@ -450,9 +442,9 @@ public class DataFrame {
                 LoopAppl(object,output,this);
                 return output;
             }
-            public void operate(DataFrame df,ArrayList<Value> temp, int b)throws InvalidData, InvalidOperation{
+            public void operate(DataFrame df,ArrayList<Value> temp, int b,int a)throws InvalidData, InvalidOperation{
                 if (isNumber(df.Table.get(b).get(0))) {
-                    temp.add(stdOfArray(df.Table.get(b),df.names.get(b)));
+                    temp.set(a,stdOfArray(df.Table.get(b),df.names.get(b)));
                 }
             }
         }
@@ -463,9 +455,9 @@ public class DataFrame {
                 LoopAppl(object,output,this);
                 return output;
             }
-            public void operate(DataFrame df,ArrayList<Value> temp, int b)throws InvalidData, InvalidOperation{
+            public void operate(DataFrame df,ArrayList<Value> temp, int b,int a)throws InvalidData, InvalidOperation{
                 if (isNumber(df.Table.get(b).get(0))) {
-                    temp.add(sumOfArray(df.Table.get(b),df.names.get(b)));
+                    temp.set(a,sumOfArray(df.Table.get(b),df.names.get(b)));
                 }
             }
         }
@@ -476,9 +468,9 @@ public class DataFrame {
                 LoopAppl(object,output,this);
                 return output;
             }
-            public void operate(DataFrame df,ArrayList<Value> temp, int b)throws InvalidData, InvalidOperation{
+            public void operate(DataFrame df,ArrayList<Value> temp, int b, int a)throws InvalidData, InvalidOperation{
                 if (isNumber(df.Table.get(b).get(0))) {
-                    temp.add(varOfArray(df.Table.get(b),df.names.get(b)));
+                    temp.set(a,varOfArray(df.Table.get(b),df.names.get(b)));
                 }
             }
         }
